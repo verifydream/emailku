@@ -1,22 +1,21 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
-
-interface Email {
-  id: number
-  baseEmail: string
-  generatedEmail: string
-  isUsed: boolean
-  usedAt: string | null
-  createdAt: string
-  note: string | null
-}
+import { useState, useEffect, useMemo } from 'react'
+import { 
+  getEmails, 
+  saveEmails, 
+  addEmails, 
+  updateEmail, 
+  deleteEmail as deleteEmailStorage, 
+  deleteAllEmails,
+  Email 
+} from '@/lib/storage'
+import { generateDotVariations, isValidGmail } from '@/lib/generator'
 
 type ToastType = 'success' | 'error' | 'info'
 
 const PAGE_SIZE_OPTIONS = [10, 15, 25, 50, 100] as const
 
-// Icons as components for cleaner code
 const Icons = {
   sun: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
   moon: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>,
@@ -52,38 +51,27 @@ export default function Home() {
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [selectedEmails, setSelectedEmails] = useState<Set<number>>(new Set())
   const [selectMode, setSelectMode] = useState(false)
-  const [itemsPerPage, setItemsPerPage] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('itemsPerPage')
-      return saved ? parseInt(saved) : 15
-    }
-    return 15
-  })
+  const [itemsPerPage, setItemsPerPage] = useState(15)
 
   const showToast = (message: string, type: ToastType = 'success') => {
     setToast({ message, type })
     setTimeout(() => setToast(null), 2500)
   }
 
-  const fetchEmails = useCallback(async () => {
-    try {
-      const res = await fetch('/api/emails')
-      const data = await res.json()
-      setEmails(Array.isArray(data) ? data : [])
-    } catch (error) {
-      console.error('Failed to fetch emails:', error)
-      setEmails([])
-    } finally {
-      setInitialLoading(false)
-    }
-  }, [])
+  const loadEmails = () => {
+    const data = getEmails()
+    setEmails(data)
+    setInitialLoading(false)
+  }
 
   useEffect(() => {
-    fetchEmails()
+    loadEmails()
+    const savedItemsPerPage = localStorage.getItem('itemsPerPage')
+    if (savedItemsPerPage) setItemsPerPage(parseInt(savedItemsPerPage))
     const isDark = localStorage.getItem('darkMode') === 'true' || 
       window.matchMedia('(prefers-color-scheme: dark)').matches
     setDarkMode(isDark)
-  }, [fetchEmails])
+  }, [])
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode)
@@ -119,46 +107,60 @@ export default function Home() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [emails])
 
-  const generateEmails = async () => {
+  const handleGenerate = () => {
     if (!inputEmail) return
-    setLoading(true)
-    const res = await fetch('/api/emails', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: inputEmail }),
-    })
-    const data = await res.json()
-    if (data.error) {
-      showToast(data.error, 'error')
-    } else {
-      showToast(`Generated ${data.inserted} email variations!`, 'success')
+    
+    if (!isValidGmail(inputEmail)) {
+      showToast('Invalid Gmail address', 'error')
+      return
     }
-    await fetchEmails()
-    setInputEmail('')
-    setLoading(false)
-    setCurrentPage(1)
+
+    setLoading(true)
+    
+    try {
+      const variations = generateDotVariations(inputEmail)
+      const baseEmail = inputEmail.toLowerCase().replace(/\./g, '').replace('@gmailcom', '@gmail.com')
+      const now = new Date().toISOString()
+      
+      const newEmails = variations.map(generatedEmail => ({
+        baseEmail,
+        generatedEmail,
+        isUsed: false,
+        usedAt: null,
+        createdAt: now,
+        note: null,
+      }))
+
+      const result = addEmails(newEmails)
+      loadEmails()
+      showToast(`Generated ${result.inserted} email variations!`, 'success')
+      setInputEmail('')
+      setCurrentPage(1)
+    } catch (error) {
+      showToast('Failed to generate emails', 'error')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const toggleUsed = async (id: number, currentStatus: boolean) => {
-    setEmails(prev => prev.map(e => e.id === id ? { ...e, isUsed: !currentStatus } : e))
-    await fetch(`/api/emails/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isUsed: !currentStatus }),
+  const toggleUsed = (id: number, currentStatus: boolean) => {
+    updateEmail(id, { 
+      isUsed: !currentStatus, 
+      usedAt: !currentStatus ? new Date().toISOString() : null 
     })
-    await fetchEmails()
+    loadEmails()
   }
 
-  const deleteEmail = async (id: number) => {
-    setEmails(prev => prev.filter(e => e.id !== id))
-    await fetch(`/api/emails/${id}`, { method: 'DELETE' })
+  const handleDeleteEmail = (id: number) => {
+    deleteEmailStorage(id)
+    loadEmails()
     showToast('Email deleted', 'info')
   }
 
-  const clearAll = async () => {
+  const clearAll = () => {
     if (confirm('Delete all emails? This cannot be undone.')) {
-      await fetch('/api/emails', { method: 'DELETE' })
-      await fetchEmails()
+      deleteAllEmails()
+      loadEmails()
       showToast('All emails deleted', 'info')
     }
   }
@@ -173,13 +175,9 @@ export default function Home() {
     window.open(`https://mail.google.com/mail/u/${email}`, '_blank')
   }
 
-  const saveNote = async (id: number) => {
-    await fetch(`/api/emails/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ note: noteText || null }),
-    })
-    await fetchEmails()
+  const handleSaveNote = (id: number) => {
+    updateEmail(id, { note: noteText || null })
+    loadEmails()
     setEditingNote(null)
     setNoteText('')
     showToast('Note saved', 'success')
@@ -216,7 +214,7 @@ export default function Home() {
     showToast('CSV exported!', 'success')
   }
 
-  const markAllUsed = async () => {
+  const markAllUsed = () => {
     const targets = selectMode && selectedEmails.size > 0 
       ? filteredEmails.filter(e => selectedEmails.has(e.id) && !e.isUsed)
       : filteredEmails.filter(e => !e.isUsed)
@@ -227,27 +225,23 @@ export default function Home() {
     }
 
     for (const email of targets) {
-      await fetch(`/api/emails/${email.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isUsed: true }),
-      })
+      updateEmail(email.id, { isUsed: true, usedAt: new Date().toISOString() })
     }
-    await fetchEmails()
+    loadEmails()
     setSelectedEmails(new Set())
     setSelectMode(false)
     showToast(`Marked ${targets.length} emails as used`, 'success')
   }
 
-  const deleteSelected = async () => {
+  const deleteSelected = () => {
     if (selectedEmails.size === 0) return
     if (!confirm(`Delete ${selectedEmails.size} selected emails?`)) return
     
     const idsToDelete = Array.from(selectedEmails)
     for (const id of idsToDelete) {
-      await fetch(`/api/emails/${id}`, { method: 'DELETE' })
+      deleteEmailStorage(id)
     }
-    await fetchEmails()
+    loadEmails()
     setSelectedEmails(new Set())
     setSelectMode(false)
     showToast(`Deleted ${idsToDelete.length} emails`, 'info')
@@ -316,7 +310,7 @@ export default function Home() {
     <main className="min-h-screen p-4 md:p-6 lg:p-8">
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-50 animate-slide-down`}>
+        <div className="fixed top-4 right-4 z-50 animate-slide-down">
           <div className={`px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 ${
             toast.type === 'success' ? 'bg-green-500 text-white' :
             toast.type === 'error' ? 'bg-red-500 text-white' :
@@ -363,7 +357,7 @@ export default function Home() {
               Gmail Dot Generator
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-sm flex items-center gap-2">
-              Generate unlimited email variations
+              Generate unlimited email variations (stored locally)
               <button 
                 onClick={() => setShowShortcuts(true)}
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
@@ -392,7 +386,7 @@ export default function Home() {
                 onChange={(e) => setInputEmail(e.target.value)}
                 placeholder="Enter Gmail address (e.g., yourname@gmail.com)"
                 className="w-full px-5 py-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 transition-colors text-lg"
-                onKeyDown={(e) => e.key === 'Enter' && generateEmails()}
+                onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
               />
               {inputEmail && (
                 <button 
@@ -404,7 +398,7 @@ export default function Home() {
               )}
             </div>
             <button
-              onClick={generateEmails}
+              onClick={handleGenerate}
               disabled={loading || !inputEmail}
               className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:from-slate-400 disabled:to-slate-400 text-white font-semibold rounded-xl transition-all duration-300 flex items-center justify-center gap-3 btn-hover disabled:cursor-not-allowed shadow-lg hover:shadow-xl active:scale-[0.98]"
             >
@@ -433,7 +427,7 @@ export default function Home() {
               { label: 'Total', value: stats.total, color: 'text-slate-800 dark:text-white', bg: 'from-slate-500/10 to-slate-500/5' },
               { label: 'Available', value: stats.available, color: 'text-emerald-600 dark:text-emerald-400', bg: 'from-emerald-500/10 to-emerald-500/5' },
               { label: 'Used', value: stats.used, color: 'text-rose-600 dark:text-rose-400', bg: 'from-rose-500/10 to-rose-500/5' },
-            ].map((stat, i) => (
+            ].map((stat) => (
               <div key={stat.label} className={`glass rounded-xl p-4 text-center card-hover bg-gradient-to-br ${stat.bg}`}>
                 <div className={`text-3xl font-bold ${stat.color}`}>{stat.value}</div>
                 <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">{stat.label}</div>
@@ -458,7 +452,6 @@ export default function Home() {
         {/* Action Bar */}
         {emails.length > 0 && (
           <section className="glass rounded-2xl p-4 mb-6 animate-fade-in-up shadow-lg" style={{ animationDelay: '0.2s' }}>
-            {/* Quick Actions */}
             <div className="flex flex-wrap gap-2 mb-4">
               <button
                 onClick={pickRandom}
@@ -549,25 +542,19 @@ export default function Home() {
           </section>
         )}
 
-        {/* Select All (when in select mode) */}
+        {/* Select All */}
         {selectMode && paginatedEmails.length > 0 && (
           <div className="flex items-center gap-3 mb-3 animate-fade-in">
-            <button
-              onClick={selectAll}
-              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-            >
+            <button onClick={selectAll} className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
               {selectedEmails.size === paginatedEmails.length ? 'Deselect All' : 'Select All on Page'}
             </button>
-            <span className="text-sm text-slate-400">
-              {selectedEmails.size} selected
-            </span>
+            <span className="text-sm text-slate-400">{selectedEmails.size} selected</span>
           </div>
         )}
 
         {/* Email List */}
         <div className="space-y-2">
           {initialLoading ? (
-            // Skeleton loading
             Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="glass rounded-xl p-4 animate-pulse">
                 <div className="flex items-center gap-4">
@@ -617,7 +604,6 @@ export default function Home() {
                       </span>
                     </div>
                     
-                    {/* Actions */}
                     {!selectMode && (
                       <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
                         <button
@@ -661,7 +647,7 @@ export default function Home() {
                           {email.isUsed ? Icons.undo : Icons.check}
                         </button>
                         <button
-                          onClick={() => deleteEmail(email.id)}
+                          onClick={() => handleDeleteEmail(email.id)}
                           className="p-2.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200 tooltip"
                           data-tooltip="Delete"
                         >
@@ -671,7 +657,6 @@ export default function Home() {
                     )}
                   </div>
 
-                  {/* Note display/edit */}
                   {editingNote === email.id ? (
                     <div className="flex gap-2 mt-3 ml-0 lg:ml-12 animate-fade-in" onClick={e => e.stopPropagation()}>
                       <input
@@ -681,12 +666,12 @@ export default function Home() {
                         placeholder="Add a note..."
                         className="flex-1 px-4 py-2 text-sm rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:border-blue-500"
                         onKeyDown={(e) => {
-                          if (e.key === 'Enter') saveNote(email.id)
+                          if (e.key === 'Enter') handleSaveNote(email.id)
                           if (e.key === 'Escape') setEditingNote(null)
                         }}
                         autoFocus
                       />
-                      <button onClick={() => saveNote(email.id)} className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors">
+                      <button onClick={() => handleSaveNote(email.id)} className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors">
                         Save
                       </button>
                       <button onClick={() => setEditingNote(null)} className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-medium rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
@@ -720,7 +705,6 @@ export default function Home() {
         {filteredEmails.length > 0 && (
           <nav className="glass rounded-2xl p-4 mt-6 animate-fade-in shadow-lg">
             <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
-              {/* Items per page selector */}
               <div className="flex items-center gap-3">
                 <span className="text-sm text-slate-500 dark:text-slate-400">Show</span>
                 <div className="flex gap-1 p-1 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
@@ -741,21 +725,17 @@ export default function Home() {
                 <span className="text-sm text-slate-500 dark:text-slate-400">per page</span>
               </div>
 
-              {/* Page info */}
               <div className="text-sm text-slate-600 dark:text-slate-400 font-medium">
                 Showing <span className="text-slate-800 dark:text-white">{startIndex}</span> - <span className="text-slate-800 dark:text-white">{endIndex}</span> of <span className="text-slate-800 dark:text-white">{filteredEmails.length}</span> emails
               </div>
 
-              {/* Page navigation */}
               {totalPages > 1 && (
                 <div className="flex items-center gap-2">
-                  {/* First & Prev */}
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => setCurrentPage(1)}
                       disabled={currentPage === 1}
                       className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-200 active:scale-95"
-                      title="First page"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
@@ -765,40 +745,27 @@ export default function Home() {
                       onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
                       className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-200 active:scale-95"
-                      title="Previous page"
                     >
                       {Icons.chevronLeft}
                     </button>
                   </div>
                   
-                  {/* Page numbers */}
                   <div className="flex items-center gap-1">
                     {(() => {
                       const pages: (number | 'ellipsis')[] = []
-                      
                       if (totalPages <= 7) {
                         for (let i = 1; i <= totalPages; i++) pages.push(i)
                       } else {
                         pages.push(1)
-                        
-                        if (currentPage > 3) {
-                          pages.push('ellipsis')
-                        }
-                        
+                        if (currentPage > 3) pages.push('ellipsis')
                         const start = Math.max(2, currentPage - 1)
                         const end = Math.min(totalPages - 1, currentPage + 1)
-                        
                         for (let i = start; i <= end; i++) {
                           if (!pages.includes(i)) pages.push(i)
                         }
-                        
-                        if (currentPage < totalPages - 2) {
-                          pages.push('ellipsis')
-                        }
-                        
+                        if (currentPage < totalPages - 2) pages.push('ellipsis')
                         if (!pages.includes(totalPages)) pages.push(totalPages)
                       }
-                      
                       return pages.map((page, idx) => 
                         page === 'ellipsis' ? (
                           <span key={`ellipsis-${idx}`} className="px-2 text-slate-400">...</span>
@@ -819,13 +786,11 @@ export default function Home() {
                     })()}
                   </div>
 
-                  {/* Next & Last */}
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                       disabled={currentPage === totalPages}
                       className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-200 active:scale-95"
-                      title="Next page"
                     >
                       {Icons.chevronRight}
                     </button>
@@ -833,28 +798,11 @@ export default function Home() {
                       onClick={() => setCurrentPage(totalPages)}
                       disabled={currentPage === totalPages}
                       className="p-2 rounded-lg bg-slate-100 dark:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-200 dark:hover:bg-slate-600 transition-all duration-200 active:scale-95"
-                      title="Last page"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
                       </svg>
                     </button>
-                  </div>
-
-                  {/* Quick jump */}
-                  <div className="hidden md:flex items-center gap-2 ml-2 pl-2 border-l border-slate-200 dark:border-slate-600">
-                    <span className="text-sm text-slate-500 dark:text-slate-400">Go to</span>
-                    <input
-                      type="number"
-                      min={1}
-                      max={totalPages}
-                      value={currentPage}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value)
-                        if (val >= 1 && val <= totalPages) setCurrentPage(val)
-                      }}
-                      className="w-16 px-2 py-1.5 text-sm text-center rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:border-blue-500 transition-colors"
-                    />
                   </div>
                 </div>
               )}
@@ -871,7 +819,7 @@ export default function Home() {
             </h2>
             <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto">
               Enter your Gmail address above to generate unlimited dot variations. 
-              All variations point to the same inbox!
+              All data is stored locally on your device!
             </p>
           </div>
         )}
@@ -896,7 +844,7 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="text-center text-sm text-slate-400 dark:text-slate-600 mt-12 pb-6">
-          <p>Gmail Dot Generator - Private Tool</p>
+          <p>Gmail Dot Generator - Data stored locally on your device</p>
           <p className="text-xs mt-1 opacity-60">Press ? for keyboard shortcuts</p>
         </footer>
       </div>
