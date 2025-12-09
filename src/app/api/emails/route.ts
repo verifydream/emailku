@@ -8,10 +8,11 @@ export async function GET() {
   try {
     await initDb()
     const allEmails = await db.select().from(emails).orderBy(emails.id)
-    return NextResponse.json(allEmails)
+    return NextResponse.json(allEmails || [])
   } catch (error) {
     console.error('GET error:', error)
-    return NextResponse.json({ error: 'Failed to fetch emails' }, { status: 500 })
+    // Return empty array instead of error object so frontend doesn't break
+    return NextResponse.json([])
   }
 }
 

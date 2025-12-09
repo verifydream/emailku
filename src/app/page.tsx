@@ -69,7 +69,10 @@ export default function Home() {
     try {
       const res = await fetch('/api/emails')
       const data = await res.json()
-      setEmails(data)
+      setEmails(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Failed to fetch emails:', error)
+      setEmails([])
     } finally {
       setInitialLoading(false)
     }
@@ -240,13 +243,14 @@ export default function Home() {
     if (selectedEmails.size === 0) return
     if (!confirm(`Delete ${selectedEmails.size} selected emails?`)) return
     
-    for (const id of selectedEmails) {
+    const idsToDelete = Array.from(selectedEmails)
+    for (const id of idsToDelete) {
       await fetch(`/api/emails/${id}`, { method: 'DELETE' })
     }
     await fetchEmails()
     setSelectedEmails(new Set())
     setSelectMode(false)
-    showToast(`Deleted ${selectedEmails.size} emails`, 'info')
+    showToast(`Deleted ${idsToDelete.length} emails`, 'info')
   }
 
   const toggleSelect = (id: number) => {
