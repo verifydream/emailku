@@ -56,6 +56,11 @@ export function deleteEmail(id: number): void {
   saveEmails(emails.filter(e => e.id !== id))
 }
 
+export function deleteEmailsByBase(baseEmail: string): void {
+  const emails = getEmails()
+  saveEmails(emails.filter(e => e.baseEmail !== baseEmail))
+}
+
 export function deleteAllEmails(): void {
   saveEmails([])
 }

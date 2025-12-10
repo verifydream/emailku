@@ -28,7 +28,19 @@ export function generateDotVariations(email: string): string[] {
     variations.add(`${result}@${domain}`)
   }
 
-  return Array.from(variations).sort()
+  // Remove the original email (no dots added) which corresponds to i=0
+  variations.delete(`${cleanLocal}@${domain}`)
+
+  return Array.from(variations).sort((a, b) => {
+    const dotsA = (a.match(/\./g) || []).length
+    const dotsB = (b.match(/\./g) || []).length
+    
+    if (dotsA !== dotsB) {
+      return dotsA - dotsB
+    }
+    
+    return a.localeCompare(b)
+  })
 }
 
 export function isValidGmail(email: string): boolean {

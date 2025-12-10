@@ -7,6 +7,7 @@ import {
   addEmails, 
   updateEmail, 
   deleteEmail as deleteEmailStorage, 
+  deleteEmailsByBase,
   deleteAllEmails,
   Email 
 } from '@/lib/storage'
@@ -52,6 +53,9 @@ export default function Home() {
   const [selectedEmails, setSelectedEmails] = useState<Set<number>>(new Set())
   const [selectMode, setSelectMode] = useState(false)
   const [itemsPerPage, setItemsPerPage] = useState(15)
+  const [activeBaseEmail, setActiveBaseEmail] = useState<string | 'all'>('all')
+  const [jumpingEllipsis, setJumpingEllipsis] = useState<string | null>(null)
+  const [deleteModal, setDeleteModal] = useState<{ show: boolean; type: 'all' | 'group' }>({ show: false, type: 'all' })
 
   const showToast = (message: string, type: ToastType = 'success') => {
     setToast({ message, type })
@@ -133,6 +137,10 @@ export default function Home() {
 
       const result = addEmails(newEmails)
       loadEmails()
+      
+      // Switch to the new email group
+      setActiveBaseEmail(baseEmail)
+      
       showToast(`Generated ${result.inserted} email variations!`, 'success')
       setInputEmail('')
       setCurrentPage(1)
@@ -158,11 +166,23 @@ export default function Home() {
   }
 
   const clearAll = () => {
-    if (confirm('Delete all emails? This cannot be undone.')) {
+    setDeleteModal({
+      show: true,
+      type: activeBaseEmail !== 'all' ? 'group' : 'all'
+    })
+  }
+
+  const confirmDelete = () => {
+    if (deleteModal.type === 'group' && activeBaseEmail !== 'all') {
+      deleteEmailsByBase(activeBaseEmail)
+      setActiveBaseEmail('all')
+      showToast(`Deleted all emails for ${activeBaseEmail}`, 'info')
+    } else {
       deleteAllEmails()
-      loadEmails()
       showToast('All emails deleted', 'info')
     }
+    loadEmails()
+    setDeleteModal({ show: false, type: 'all' })
   }
 
   const copyToClipboard = async (email: string, id: number) => {
@@ -184,14 +204,24 @@ export default function Home() {
   }
 
   const pickRandom = () => {
-    const available = emails.filter(e => !e.isUsed)
+    // Filter by active tab + availability
+    const available = emails.filter(e => 
+      !e.isUsed && 
+      (activeBaseEmail === 'all' || e.baseEmail === activeBaseEmail)
+    )
+
     if (available.length === 0) {
       showToast('No available emails!', 'error')
       return
     }
     const random = available[Math.floor(Math.random() * available.length)]
+    
+    // Mark as used immediately
+    updateEmail(random.id, { isUsed: true, usedAt: new Date().toISOString() })
+    loadEmails()
+    
     copyToClipboard(random.generatedEmail, random.id)
-    showToast(`Copied: ${random.generatedEmail}`, 'success')
+    showToast(`Copied & marked used: ${random.generatedEmail}`, 'success')
   }
 
   const exportCSV = () => {
@@ -265,6 +295,7 @@ export default function Home() {
   }
 
   const filteredEmails = useMemo(() => emails.filter(email => {
+    const matchesBase = activeBaseEmail === 'all' || email.baseEmail === activeBaseEmail
     const matchesFilter = 
       filter === 'all' ||
       (filter === 'available' && !email.isUsed) ||
@@ -272,8 +303,14 @@ export default function Home() {
     const searchLower = search.toLowerCase()
     const matchesSearch = email.generatedEmail.toLowerCase().includes(searchLower) ||
       (email.note && email.note.toLowerCase().includes(searchLower))
-    return matchesFilter && matchesSearch
-  }), [emails, filter, search])
+    return matchesBase && matchesFilter && matchesSearch
+  }), [emails, filter, search, activeBaseEmail])
+
+  // Get unique base emails for tabs
+  const baseEmails = useMemo(() => {
+    const bases = new Set(emails.map(e => e.baseEmail))
+    return Array.from(bases).sort()
+  }, [emails])
 
   const totalPages = Math.ceil(filteredEmails.length / itemsPerPage)
   const paginatedEmails = filteredEmails.slice(
@@ -290,13 +327,36 @@ export default function Home() {
   const startIndex = (currentPage - 1) * itemsPerPage + 1
   const endIndex = Math.min(currentPage * itemsPerPage, filteredEmails.length)
 
-  const stats = useMemo(() => ({
-    total: emails.length,
-    available: emails.filter(e => !e.isUsed).length,
-    used: emails.filter(e => e.isUsed).length,
-  }), [emails])
+  const stats = useMemo(() => {
+    // Calculate stats based on ALL emails if 'all' is selected, or filtered by baseEmail otherwise
+    // But usually global stats are useful, or stats per group?
+    // Let's make stats reflect the CURRENT VIEW
+    const currentViewEmails = activeBaseEmail === 'all' 
+      ? emails 
+      : emails.filter(e => e.baseEmail === activeBaseEmail)
+
+    return {
+      total: currentViewEmails.length,
+      available: currentViewEmails.filter(e => !e.isUsed).length,
+      used: currentViewEmails.filter(e => e.isUsed).length,
+    }
+  }, [emails, activeBaseEmail])
 
   const progressPercent = stats.total > 0 ? (stats.used / stats.total) * 100 : 0
+
+  const handleJumpToPage = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      const page = parseInt((e.target as HTMLInputElement).value)
+      if (!isNaN(page) && page >= 1 && page <= totalPages) {
+        setCurrentPage(page)
+        setJumpingEllipsis(null)
+      } else {
+        showToast('Invalid page number', 'error')
+      }
+    } else if (e.key === 'Escape') {
+      setJumpingEllipsis(null)
+    }
+  }
 
   const highlightDots = (email: string) => {
     const [local, domain] = email.split('@')
@@ -349,12 +409,50 @@ export default function Home() {
         </div>
       )}
 
+      {/* Delete Confirmation Modal */}
+      {deleteModal.show && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setDeleteModal({ ...deleteModal, show: false })}>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-md w-full animate-fade-in shadow-2xl border border-slate-200 dark:border-slate-700" onClick={e => e.stopPropagation()}>
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4 text-red-500 dark:text-red-400">
+                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
+                {deleteModal.type === 'group' ? 'Delete Group?' : 'Delete Everything?'}
+              </h3>
+              <p className="text-slate-500 dark:text-slate-400">
+                {deleteModal.type === 'group' 
+                  ? `This will permanently delete all emails for "${activeBaseEmail}".`
+                  : 'This will permanently delete ALL emails from ALL groups.'}
+                <br/>This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setDeleteModal({ ...deleteModal, show: false })}
+                className="flex-1 py-3 px-4 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmDelete}
+                className="flex-1 py-3 px-4 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-red-500/30"
+              >
+                Yes, Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <header className="flex justify-between items-start mb-8 animate-fade-in">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold gradient-text mb-1">
-              Gmail Dot Generator
+              emailku
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-sm flex items-center gap-2">
               Generate unlimited email variations (stored locally)
@@ -440,13 +538,44 @@ export default function Home() {
         {emails.length > 0 && (
           <div className="mb-6 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
             <div className="flex justify-between text-sm text-slate-500 dark:text-slate-400 mb-2">
-              <span>Usage Progress</span>
+              <span>Usage Progress {activeBaseEmail !== 'all' ? `(${activeBaseEmail})` : ''}</span>
               <span>{progressPercent.toFixed(0)}%</span>
             </div>
             <div className="progress-bar">
               <div className="progress-fill" style={{ width: `${progressPercent}%` }} />
             </div>
           </div>
+        )}
+
+        {/* Base Email Tabs */}
+        {baseEmails.length > 0 && (
+          <section className="mb-6 animate-fade-in-up overflow-x-auto pb-2" style={{ animationDelay: '0.18s' }}>
+             <div className="flex gap-2">
+                <button
+                  onClick={() => setActiveBaseEmail('all')}
+                  className={`px-4 py-2 rounded-xl whitespace-nowrap font-medium transition-all duration-200 border-2 ${
+                    activeBaseEmail === 'all'
+                      ? 'bg-slate-800 dark:bg-white text-white dark:text-slate-800 border-slate-800 dark:border-white'
+                      : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500'
+                  }`}
+                >
+                  All Emails
+                </button>
+                {baseEmails.map(base => (
+                  <button
+                    key={base}
+                    onClick={() => setActiveBaseEmail(base)}
+                    className={`px-4 py-2 rounded-xl whitespace-nowrap font-medium transition-all duration-200 border-2 ${
+                      activeBaseEmail === base
+                        ? 'bg-blue-500 text-white border-blue-500 shadow-lg shadow-blue-500/25'
+                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700'
+                    }`}
+                  >
+                    {base}
+                  </button>
+                ))}
+             </div>
+          </section>
         )}
 
         {/* Action Bar */}
@@ -501,7 +630,9 @@ export default function Home() {
                 className="px-4 py-2.5 bg-slate-200 dark:bg-slate-700 hover:bg-red-100 dark:hover:bg-red-900/30 text-slate-700 dark:text-slate-200 hover:text-red-600 dark:hover:text-red-400 font-medium rounded-xl transition-all duration-200 flex items-center gap-2 ml-auto"
               >
                 {Icons.trash}
-                <span className="hidden sm:inline">Clear All</span>
+                <span className="hidden sm:inline">
+                  {activeBaseEmail !== 'all' ? 'Delete Group' : 'Clear All'}
+                </span>
               </button>
             </div>
 
@@ -707,21 +838,15 @@ export default function Home() {
             <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <span className="text-sm text-slate-500 dark:text-slate-400">Show</span>
-                <div className="flex gap-1 p-1 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                  className="px-3 py-1.5 text-sm font-medium rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white border-none focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer transition-all hover:bg-slate-200 dark:hover:bg-slate-600"
+                >
                   {PAGE_SIZE_OPTIONS.map(size => (
-                    <button
-                      key={size}
-                      onClick={() => handleItemsPerPageChange(size)}
-                      className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
-                        itemsPerPage === size
-                          ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white shadow-sm'
-                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                      }`}
-                    >
-                      {size}
-                    </button>
+                    <option key={size} value={size}>{size}</option>
                   ))}
-                </div>
+                </select>
                 <span className="text-sm text-slate-500 dark:text-slate-400">per page</span>
               </div>
 
@@ -752,37 +877,88 @@ export default function Home() {
                   
                   <div className="flex items-center gap-1">
                     {(() => {
-                      const pages: (number | 'ellipsis')[] = []
-                      if (totalPages <= 7) {
+                      const pages: (number | 'ellipsis-start' | 'ellipsis-end')[] = []
+                      // Logic: Always show 1 2 3 ... current ... last-2 last-1 last
+                      // Actually user asked for 1 2 3 ... 7 8 9 style specifically
+                      // Let's adapt standard logic but enable the ellipsis jump
+                      
+                      const siblings = 1 // number of pages around current
+                      const boundary = 3 // number of pages at start/end
+                      
+                      const startPages = []
+                      for(let i=1; i<=Math.min(boundary, totalPages); i++) startPages.push(i)
+                        
+                      const endPages = []
+                      for(let i=Math.max(totalPages-boundary+1, boundary+1); i<=totalPages; i++) endPages.push(i)
+                      
+                      // Check if we need complex logic
+                      if (totalPages <= (boundary * 2) + 1) {
                         for (let i = 1; i <= totalPages; i++) pages.push(i)
                       } else {
-                        pages.push(1)
-                        if (currentPage > 3) pages.push('ellipsis')
-                        const start = Math.max(2, currentPage - 1)
-                        const end = Math.min(totalPages - 1, currentPage + 1)
-                        for (let i = start; i <= end; i++) {
-                          if (!pages.includes(i)) pages.push(i)
+                        // We have gaps
+                        pages.push(...startPages)
+                        
+                        // Middle section around current page
+                        // If current page is far from start
+                        if (currentPage > boundary + 1) {
+                           pages.push('ellipsis-start')
                         }
-                        if (currentPage < totalPages - 2) pages.push('ellipsis')
-                        if (!pages.includes(totalPages)) pages.push(totalPages)
+                        
+                        // Add current page if it's not in start or end lists
+                        if (currentPage > boundary && currentPage <= totalPages - boundary) {
+                           pages.push(currentPage)
+                        }
+
+                        // If current page is far from end
+                        if (currentPage < totalPages - boundary) {
+                           pages.push('ellipsis-end')
+                        }
+                        
+                        pages.push(...endPages)
                       }
-                      return pages.map((page, idx) => 
-                        page === 'ellipsis' ? (
-                          <span key={`ellipsis-${idx}`} className="px-2 text-slate-400">...</span>
-                        ) : (
-                          <button
-                            key={page}
-                            onClick={() => setCurrentPage(page)}
-                            className={`min-w-[40px] h-10 px-3 rounded-lg font-medium transition-all duration-200 active:scale-95 ${
-                              currentPage === page
-                                ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-500/25'
-                                : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
-                            }`}
-                          >
-                            {page}
-                          </button>
-                        )
-                      )
+
+                      // Deduplicate just in case
+                      const uniquePages = Array.from(new Set(pages))
+
+                      return uniquePages.map((page, idx) => {
+                        if (typeof page === 'string') {
+                          const isJumping = jumpingEllipsis === page
+                          return isJumping ? (
+                             <input
+                               key={`jump-${page}`}
+                               type="number"
+                               autoFocus
+                               onBlur={() => setJumpingEllipsis(null)}
+                               onKeyDown={handleJumpToPage}
+                               className="w-16 h-10 px-2 text-center text-sm rounded-lg border-2 border-blue-500 outline-none bg-white dark:bg-slate-800"
+                               placeholder="#"
+                             />
+                          ) : (
+                            <button
+                              key={`ellipsis-${idx}`} 
+                              className="min-w-[40px] h-10 px-2 text-slate-400 hover:text-blue-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                              onClick={() => setJumpingEllipsis(page)}
+                              title="Jump to page"
+                            >
+                              ...
+                            </button>
+                          )
+                        } else {
+                          return (
+                            <button
+                              key={page}
+                              onClick={() => setCurrentPage(page)}
+                              className={`min-w-[40px] h-10 px-3 rounded-lg font-medium transition-all duration-200 active:scale-95 ${
+                                currentPage === page
+                                  ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-500/25'
+                                  : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          )
+                        }
+                      })
                     })()}
                   </div>
 
