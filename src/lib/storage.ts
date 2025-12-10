@@ -52,6 +52,34 @@ export function updateEmail(id: number, updates: Partial<Email>): void {
   }
 }
 
+// Master Tags Storage
+const TAGS_STORAGE_KEY = 'gmail-dot-generator-master-tags'
+const DEFAULT_TAGS = ['google', 'netflix', 'facebook', 'twitter', 'amazon']
+
+export function getMasterTags(): string[] {
+  if (typeof window === 'undefined') return DEFAULT_TAGS
+  const data = localStorage.getItem(TAGS_STORAGE_KEY)
+  return data ? JSON.parse(data) : DEFAULT_TAGS
+}
+
+export function saveMasterTags(tags: string[]): void {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(TAGS_STORAGE_KEY, JSON.stringify(tags))
+}
+
+export function addMasterTag(tag: string): void {
+  const tags = getMasterTags()
+  const normalized = tag.toLowerCase().trim()
+  if (normalized && !tags.includes(normalized)) {
+    saveMasterTags([...tags, normalized].sort())
+  }
+}
+
+export function removeMasterTag(tag: string): void {
+  const tags = getMasterTags()
+  saveMasterTags(tags.filter(t => t !== tag))
+}
+
 export function deleteEmail(id: number): void {
   const emails = getEmails()
   saveEmails(emails.filter(e => e.id !== id))
