@@ -529,7 +529,7 @@ export default function Home() {
     <main className="min-h-screen p-4 md:p-6 lg:p-8">
       {/* Toast */}
       {toast && (
-        <div className="fixed top-4 right-4 z-50 animate-slide-down">
+        <div className="fixed top-4 right-4 z-[100] animate-slide-down">
           <div className={`px-6 py-4 rounded-none border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-3 ${
             toast.type === 'success' ? 'bg-[#22c55e] text-white' :
             toast.type === 'error' ? 'bg-[#ef4444] text-white' :
@@ -544,7 +544,7 @@ export default function Home() {
 
       {/* Shortcuts Modal */}
       {showShortcuts && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4" onClick={() => setShowShortcuts(false)}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-4" onClick={() => setShowShortcuts(false)}>
           <div className="neo-card p-5 sm:p-8 max-w-md w-full animate-fade-in" onClick={e => e.stopPropagation()}>
             <h3 className="text-xl sm:text-2xl font-black mb-4 sm:mb-6 uppercase tracking-wider text-black dark:text-white">Shortcuts</h3>
             <div className="space-y-3 sm:space-y-4">
@@ -570,7 +570,7 @@ export default function Home() {
 
       {/* Settings Modal */}
       {showSettings && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4" onClick={() => setShowSettings(false)}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-4" onClick={() => setShowSettings(false)}>
           <div className="neo-card p-5 sm:p-8 max-w-md w-full animate-fade-in border-3 border-black" onClick={e => e.stopPropagation()}>
              <h3 className="text-xl sm:text-2xl font-black mb-4 sm:mb-6 uppercase tracking-wider text-black dark:text-white flex items-center gap-2 sm:gap-3">
                <span className="w-5 h-5 sm:w-6 sm:h-6">{Icons.settings}</span> Master Tags
@@ -632,7 +632,7 @@ export default function Home() {
 
       {/* Delete Confirmation Modal */}
       {deleteModal.show && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4" onClick={() => setDeleteModal({ ...deleteModal, show: false })}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-4" onClick={() => setDeleteModal({ ...deleteModal, show: false })}>
           <div className="neo-card p-5 sm:p-8 max-w-md w-full animate-fade-in border-3 border-black" onClick={e => e.stopPropagation()}>
             <div className="flex flex-col items-center text-center mb-4 sm:mb-6">
               <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#ef4444] rounded-full border-3 border-black flex items-center justify-center mb-4 sm:mb-6 text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
