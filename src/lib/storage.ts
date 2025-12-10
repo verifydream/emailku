@@ -6,6 +6,7 @@ export interface Email {
   usedAt: string | null
   createdAt: string
   note: string | null
+  tags: string[]
 }
 
 const STORAGE_KEY = 'gmail-dot-generator-emails'

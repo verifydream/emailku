@@ -11,7 +11,7 @@ import {
   deleteAllEmails,
   Email 
 } from '@/lib/storage'
-import { generateDotVariations, isValidGmail } from '@/lib/generator'
+import { generateVariations, isValidGmail, GenerationMode } from '@/lib/generator'
 
 type ToastType = 'success' | 'error' | 'info'
 
@@ -34,11 +34,15 @@ const Icons = {
   chevronLeft: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>,
   chevronRight: <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>,
   keyboard: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3C6.48 3 2 6.48 2 11c0 2.66 1.46 5.03 3.77 6.44l-.27 2.56 2.89-1.93C9.46 18.68 10.7 19 12 19c5.52 0 10-3.48 10-8s-4.48-8-10-8z" /></svg>,
+  tag: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>,
+  plus: <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>,
 }
 
 export default function Home() {
   const [emails, setEmails] = useState<Email[]>([])
   const [inputEmail, setInputEmail] = useState('')
+  const [inputTag, setInputTag] = useState('')
+  const [genMode, setGenMode] = useState<GenerationMode>('dot')
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'available' | 'used'>('all')
@@ -46,14 +50,16 @@ export default function Home() {
   const [darkMode, setDarkMode] = useState(false)
   const [copied, setCopied] = useState<number | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
-  const [editingNote, setEditingNote] = useState<number | null>(null)
+  const [editingEmailId, setEditingEmailId] = useState<number | null>(null)
   const [noteText, setNoteText] = useState('')
+  const [tagText, setTagText] = useState('')
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null)
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [selectedEmails, setSelectedEmails] = useState<Set<number>>(new Set())
   const [selectMode, setSelectMode] = useState(false)
   const [itemsPerPage, setItemsPerPage] = useState(15)
   const [activeBaseEmail, setActiveBaseEmail] = useState<string | 'all'>('all')
+  const [selectedTag, setSelectedTag] = useState<string | 'all'>('all')
   const [jumpingEllipsis, setJumpingEllipsis] = useState<string | null>(null)
   const [deleteModal, setDeleteModal] = useState<{ show: boolean; type: 'all' | 'group' }>({ show: false, type: 'all' })
 
@@ -101,7 +107,7 @@ export default function Home() {
       if (e.key === 'Escape') {
         setSelectMode(false)
         setSelectedEmails(new Set())
-        setEditingNote(null)
+        setEditingEmailId(null)
       }
       if (e.key === '?') {
         setShowShortcuts(s => !s)
@@ -119,10 +125,15 @@ export default function Home() {
       return
     }
 
+    if ((genMode === 'plus' || genMode === 'mixed') && !inputTag.trim()) {
+      showToast('Please enter a tag (e.g., "work")', 'error')
+      return
+    }
+
     setLoading(true)
     
     try {
-      const variations = generateDotVariations(inputEmail)
+      const variations = generateVariations(inputEmail, genMode, inputTag.trim())
       const baseEmail = inputEmail.toLowerCase().replace(/\./g, '').replace('@gmailcom', '@gmail.com')
       const now = new Date().toISOString()
       
@@ -133,6 +144,7 @@ export default function Home() {
         usedAt: null,
         createdAt: now,
         note: null,
+        tags: []
       }))
 
       const result = addEmails(newEmails)
@@ -198,9 +210,31 @@ export default function Home() {
   const handleSaveNote = (id: number) => {
     updateEmail(id, { note: noteText || null })
     loadEmails()
-    setEditingNote(null)
+    setEditingEmailId(null)
     setNoteText('')
     showToast('Note saved', 'success')
+  }
+
+  const handleAddTag = (id: number) => {
+    if (!tagText.trim()) return
+    const email = emails.find(e => e.id === id)
+    if (email) {
+      const currentTags = email.tags || []
+      if (!currentTags.includes(tagText.trim())) {
+        updateEmail(id, { tags: [...currentTags, tagText.trim()] })
+        loadEmails()
+      }
+    }
+    setTagText('')
+  }
+
+  const handleRemoveTag = (id: number, tagToRemove: string) => {
+    const email = emails.find(e => e.id === id)
+    if (email) {
+       const currentTags = email.tags || []
+       updateEmail(id, { tags: currentTags.filter(t => t !== tagToRemove) })
+       loadEmails()
+    }
   }
 
   const pickRandom = () => {
@@ -300,16 +334,25 @@ export default function Home() {
       filter === 'all' ||
       (filter === 'available' && !email.isUsed) ||
       (filter === 'used' && email.isUsed)
+    const matchesTag = selectedTag === 'all' || (email.tags && email.tags.includes(selectedTag))
     const searchLower = search.toLowerCase()
     const matchesSearch = email.generatedEmail.toLowerCase().includes(searchLower) ||
-      (email.note && email.note.toLowerCase().includes(searchLower))
-    return matchesBase && matchesFilter && matchesSearch
-  }), [emails, filter, search, activeBaseEmail])
+      (email.note && email.note.toLowerCase().includes(searchLower)) ||
+      (email.tags && email.tags.some(t => t.toLowerCase().includes(searchLower)))
+    return matchesBase && matchesFilter && matchesTag && matchesSearch
+  }), [emails, filter, search, activeBaseEmail, selectedTag])
 
   // Get unique base emails for tabs
   const baseEmails = useMemo(() => {
     const bases = new Set(emails.map(e => e.baseEmail))
     return Array.from(bases).sort()
+  }, [emails])
+
+  // Get unique tags for filter
+  const uniqueTags = useMemo(() => {
+    const tags = new Set<string>()
+    emails.forEach(e => e.tags?.forEach(t => tags.add(t)))
+    return Array.from(tags).sort()
   }, [emails])
 
   const totalPages = Math.ceil(filteredEmails.length / itemsPerPage)
@@ -476,45 +519,85 @@ export default function Home() {
 
         {/* Input Section */}
         <section className="glass rounded-2xl p-6 mb-6 animate-fade-in-up shadow-lg">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <input
-                type="email"
-                value={inputEmail}
-                onChange={(e) => setInputEmail(e.target.value)}
-                placeholder="Enter Gmail address (e.g., yourname@gmail.com)"
-                className="w-full px-5 py-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 transition-colors text-lg"
-                onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
-              />
-              {inputEmail && (
-                <button 
-                  onClick={() => setInputEmail('')}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                >
-                  ×
-                </button>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 relative">
+                <input
+                  type="email"
+                  value={inputEmail}
+                  onChange={(e) => setInputEmail(e.target.value)}
+                  placeholder="Enter Gmail (e.g., yourname@gmail.com)"
+                  className="w-full px-5 py-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 transition-colors text-lg"
+                  onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
+                />
+                {inputEmail && (
+                  <button 
+                    onClick={() => setInputEmail('')}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+
+              {(genMode === 'plus' || genMode === 'mixed') && (
+                 <div className="w-full md:w-48 relative animate-fade-in">
+                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">
+                     +
+                   </div>
+                   <input
+                     type="text"
+                     value={inputTag}
+                     onChange={(e) => setInputTag(e.target.value)}
+                     placeholder="tag"
+                     className="w-full pl-8 pr-4 py-4 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 transition-colors text-lg"
+                     onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
+                   />
+                 </div>
               )}
+
+              <button
+                onClick={handleGenerate}
+                disabled={loading || !inputEmail}
+                className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:from-slate-400 disabled:to-slate-400 text-white font-semibold rounded-xl transition-all duration-300 flex items-center justify-center gap-3 btn-hover disabled:cursor-not-allowed shadow-lg hover:shadow-xl active:scale-[0.98]"
+              >
+                {loading ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                    </svg>
+                    <span>Generating...</span>
+                  </>
+                ) : (
+                  <>
+                    {Icons.sparkle}
+                    <span>Generate</span>
+                  </>
+                )}
+              </button>
             </div>
-            <button
-              onClick={handleGenerate}
-              disabled={loading || !inputEmail}
-              className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:from-slate-400 disabled:to-slate-400 text-white font-semibold rounded-xl transition-all duration-300 flex items-center justify-center gap-3 btn-hover disabled:cursor-not-allowed shadow-lg hover:shadow-xl active:scale-[0.98]"
-            >
-              {loading ? (
-                <>
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-                  </svg>
-                  <span>Generating...</span>
-                </>
-              ) : (
-                <>
-                  {Icons.sparkle}
-                  <span>Generate</span>
-                </>
-              )}
-            </button>
+
+            <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-700/50 rounded-xl w-fit">
+               <button 
+                  onClick={() => setGenMode('dot')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${genMode === 'dot' ? 'bg-white dark:bg-slate-600 shadow text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+               >
+                 Dot Only
+               </button>
+               <button 
+                  onClick={() => setGenMode('plus')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${genMode === 'plus' ? 'bg-white dark:bg-slate-600 shadow text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+               >
+                 Plus Only
+               </button>
+               <button 
+                  onClick={() => setGenMode('mixed')}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${genMode === 'mixed' ? 'bg-white dark:bg-slate-600 shadow text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
+               >
+                 Mixed (Dot + Plus)
+               </button>
+            </div>
           </div>
         </section>
 
@@ -638,24 +721,40 @@ export default function Home() {
 
             {/* Filter & Search */}
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-              <div className="flex gap-1 p-1 bg-slate-100 dark:bg-slate-700/50 rounded-xl">
-                {(['all', 'available', 'used'] as const).map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => { setFilter(f); setCurrentPage(1) }}
-                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                      filter === f
-                        ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white shadow-sm'
-                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                    }`}
+              <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                <div className="flex gap-1 p-1 bg-slate-100 dark:bg-slate-700/50 rounded-xl">
+                  {(['all', 'available', 'used'] as const).map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => { setFilter(f); setCurrentPage(1) }}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                        filter === f
+                          ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white shadow-sm'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                      }`}
+                    >
+                      {f.charAt(0).toUpperCase() + f.slice(1)}
+                      <span className="ml-1.5 text-xs opacity-60">
+                        {f === 'all' ? stats.total : f === 'available' ? stats.available : stats.used}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                {uniqueTags.length > 0 && (
+                  <select
+                    value={selectedTag}
+                    onChange={(e) => { setSelectedTag(e.target.value); setCurrentPage(1) }}
+                    className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 border-none focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
                   >
-                    {f.charAt(0).toUpperCase() + f.slice(1)}
-                    <span className="ml-1.5 text-xs opacity-60">
-                      {f === 'all' ? stats.total : f === 'available' ? stats.available : stats.used}
-                    </span>
-                  </button>
-                ))}
+                    <option value="all">All Tags</option>
+                    {uniqueTags.map(tag => (
+                      <option key={tag} value={tag}>{tag}</option>
+                    ))}
+                  </select>
+                )}
               </div>
+
               <div className="relative w-full md:w-80">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
                   {Icons.search}
@@ -756,13 +855,13 @@ export default function Home() {
                           {Icons.mail}
                         </button>
                         <button
-                          onClick={() => { setEditingNote(email.id); setNoteText(email.note || '') }}
+                          onClick={() => { setEditingEmailId(email.id); setNoteText(email.note || '') }}
                           className={`p-2.5 rounded-lg transition-all duration-200 tooltip ${
-                            email.note 
+                            (email.note || (email.tags && email.tags.length > 0))
                               ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400' 
                               : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
                           }`}
-                          data-tooltip={email.note ? 'Edit note' : 'Add note'}
+                          data-tooltip="Edit note & tags"
                         >
                           {Icons.note}
                         </button>
@@ -788,31 +887,75 @@ export default function Home() {
                     )}
                   </div>
 
-                  {editingNote === email.id ? (
-                    <div className="flex gap-2 mt-3 ml-0 lg:ml-12 animate-fade-in" onClick={e => e.stopPropagation()}>
-                      <input
-                        type="text"
-                        value={noteText}
-                        onChange={(e) => setNoteText(e.target.value)}
-                        placeholder="Add a note..."
-                        className="flex-1 px-4 py-2 text-sm rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:border-blue-500"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleSaveNote(email.id)
-                          if (e.key === 'Escape') setEditingNote(null)
-                        }}
-                        autoFocus
-                      />
-                      <button onClick={() => handleSaveNote(email.id)} className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors">
-                        Save
-                      </button>
-                      <button onClick={() => setEditingNote(null)} className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-sm font-medium rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors">
-                        Cancel
-                      </button>
+                  {/* Tags Display */}
+                  <div className="flex flex-wrap gap-2 mt-2 ml-0 lg:ml-12">
+                     {email.tags && email.tags.map(tag => (
+                       <span key={tag} className="px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                         {tag}
+                       </span>
+                     ))}
+                  </div>
+
+                  {editingEmailId === email.id ? (
+                    <div className="mt-3 ml-0 lg:ml-12 animate-fade-in p-4 bg-slate-50 dark:bg-slate-700/30 rounded-xl" onClick={e => e.stopPropagation()}>
+                      <div className="mb-3">
+                        <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Note</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={noteText}
+                            onChange={(e) => setNoteText(e.target.value)}
+                            placeholder="Add a note..."
+                            className="flex-1 px-4 py-2 text-sm rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:border-blue-500"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleSaveNote(email.id)
+                              if (e.key === 'Escape') setEditingEmailId(null)
+                            }}
+                            autoFocus
+                          />
+                          <button onClick={() => handleSaveNote(email.id)} className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors">
+                            Save
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">Tags</label>
+                        <div className="flex gap-2 mb-2">
+                          <input
+                             type="text"
+                             value={tagText}
+                             onChange={(e) => setTagText(e.target.value)}
+                             placeholder="Add tag (e.g. social)"
+                             className="flex-1 px-4 py-2 text-sm rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:border-blue-500"
+                             onKeyDown={(e) => {
+                               if (e.key === 'Enter') handleAddTag(email.id)
+                             }}
+                          />
+                          <button onClick={() => handleAddTag(email.id)} className="px-4 py-2 bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-700 dark:text-slate-200 text-sm font-medium rounded-lg transition-colors">
+                            Add Tag
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                           {email.tags && email.tags.map(tag => (
+                             <span key={tag} className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300">
+                               {tag}
+                               <button onClick={() => handleRemoveTag(email.id, tag)} className="hover:text-red-500">×</button>
+                             </span>
+                           ))}
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex justify-end">
+                         <button onClick={() => setEditingEmailId(null)} className="text-xs text-slate-400 hover:text-slate-600 underline">
+                            Close Editor
+                         </button>
+                      </div>
                     </div>
                   ) : email.note && (
                     <div 
                       className="text-sm text-slate-500 dark:text-slate-400 mt-2 ml-0 lg:ml-12 flex items-center gap-2 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                      onClick={(e) => { e.stopPropagation(); setEditingNote(email.id); setNoteText(email.note || '') }}
+                      onClick={(e) => { e.stopPropagation(); setEditingEmailId(email.id); setNoteText(email.note || '') }}
                     >
                       {Icons.note}
                       <span>{email.note}</span>
