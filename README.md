@@ -1,82 +1,123 @@
+<div align="center">
+
 # emailku.
 
-![emailku banner](https://via.placeholder.com/1200x400/000000/ffffff?text=emailku.)
+![emailku banner](./images/banner.png)
 
-> **Generate unlimited email variations with style.**  
-> Exploits Gmail's dot-ignoring behavior and plus-addressing feature to create infinite aliases from a single account.
+### Generate Unlimited Email Variations with Style
 
-🔗 **Live Demo:** [https://emailku.vercel.app](https://emailku.vercel.app)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-emailku.vercel.app-3b82f6?style=for-the-badge&logo=vercel)](https://emailku.vercel.app)
+[![Next.js](https://img.shields.io/badge/Next.js%2014-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 
----
+*Exploits Gmail's dot-ignoring behavior and plus-addressing feature to create infinite aliases from a single account.*
 
-## 🚀 Features
-
-### 📧 Generation Modes
-*   **Dot Only**: Adds random dots to your username (`e.mail@gmail.com`). Gmail ignores these dots, so all emails land in your primary inbox.
-*   **Plus Only**: Appends tags using the plus sign (`email+tag@gmail.com`). Perfect for filtering.
-*   **Mixed Mode**: Combines both techniques for maximum variation.
-
-### 🎨 Neo-Brutalism Design
-*   Bold typography, hard shadows, and high contrast.
-*   Fully responsive layout with a custom mobile experience.
-*   **Dark Mode** support out of the box.
-
-### 🔒 Privacy First
-*   **100% Local Storage**: No data is sent to any server. Your generated emails and history live only in your browser.
-*   **Offline Capable**: Works without an internet connection once loaded.
-
-### 🛠 Power Tools
-*   **Master Tags**: Manage your favorite plus-addressing tags (Netflix, Work, Social, etc.).
-*   **History Management**: Track used/available emails, add notes, and mark them as used.
-*   **Export**: Download your entire generated list as a CSV.
-*   **Shortcuts**: Keyboard shortcuts for power users (`Ctrl+R` for random pick, etc.).
+</div>
 
 ---
 
-## 🛠️ Tech Stack
+## Preview
 
-*   **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
-*   **Language**: [TypeScript](https://www.typescriptlang.org/)
-*   **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-*   **Icons**: Hand-coded SVGs
+<div align="center">
 
----
+### Homepage
+![Homepage Preview](./images/preview-homepage.png)
 
-## 💻 Getting Started
+</div>
 
-1.  **Clone the repository**
-    ```bash
-    git clone https://github.com/verifydream/emailku.git
-    cd emailku
-    ```
+<details>
+<summary><b>View More Screenshots</b></summary>
 
-2.  **Install dependencies**
-    ```bash
-    npm install
-    ```
+<br>
 
-3.  **Run the development server**
-    ```bash
-    npm run dev
-    ```
+### Dot Mode - Email Variations
+![Dot Mode Preview](./images/preview-email-dot.png)
 
-4.  Open [http://localhost:3000](http://localhost:3000) in your browser.
+### Plus Mode - Tagged Emails  
+![Plus Mode Preview](./images/preview-email-tags.png)
+
+### Master Tags Management
+![Master Tags Preview](./images/preview-master-tags.png)
+
+</details>
 
 ---
 
-## ⌨️ Keyboard Shortcuts
+## Features
+
+### Generation Modes
+
+| Mode | Description | Example |
+|:---:|:---|:---|
+| **Dot Only** | Adds random dots to username | `e.mail@gmail.com` |
+| **Plus Only** | Appends tags using plus sign | `email+netflix@gmail.com` |
+| **Mixed** | Combines both techniques | `e.mail+work@gmail.com` |
+
+### Core Features
+
+- **Neo-Brutalism Design** - Bold typography, hard shadows, high contrast
+- **Dark Mode** - Easy on the eyes, available out of the box
+- **100% Local Storage** - No server, your data stays in your browser
+- **Offline Capable** - Works without internet once loaded
+- **Master Tags** - Manage favorite tags (Netflix, Work, Social, etc.)
+- **History Tracking** - Track used/available emails with notes
+- **CSV Export** - Download your entire list
+- **Keyboard Shortcuts** - For power users
+
+---
+
+## Quick Start
+
+```bash
+# Clone repository
+git clone https://github.com/verifydream/emailku.git
+cd emailku
+
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
+## Keyboard Shortcuts
 
 | Key | Action |
-| :--- | :--- |
-| `Ctrl + R` | Pick a random available email |
+|:---:|:---|
+| `Ctrl + R` | Pick random available email |
 | `Ctrl + E` | Export list to CSV |
 | `Ctrl + K` | Focus search bar |
-| `Escape` | Cancel / Close Modals |
-| `?` | Toggle Shortcuts Menu |
+| `Escape` | Cancel / Close modals |
+| `?` | Toggle shortcuts menu |
 
 ---
 
-## © Copyright
+## Tech Stack
 
-**TheVeriVibe 2025**  
-*Created with ❤️ and caffeine.*
+| Technology | Purpose |
+|:---:|:---|
+| [Next.js 14](https://nextjs.org/) | React Framework |
+| [TypeScript](https://www.typescriptlang.org/) | Type Safety |
+| [Tailwind CSS](https://tailwindcss.com/) | Styling |
+| Local Storage | Data Persistence |
+
+---
+
+<div align="center">
+
+## License
+
+**TheVeriVibe 2025**
+
+*Created with passion and caffeine.*
+
+---
+
+If you find this project useful, please consider giving it a star!
+
+</div>
