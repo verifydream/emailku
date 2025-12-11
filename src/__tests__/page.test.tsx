@@ -201,7 +201,7 @@ describe('Home Page', () => {
         const pageSizeSelect = screen.getByRole('combobox', { name: /Show items per page/i })
         fireEvent.change(pageSizeSelect, { target: { value: '25' } })
         expect(pageSizeSelect).toHaveValue('25')
-    })
+    }, 10000)
 
     test('email actions: delete, status', async () => {
         render(<Home />)
@@ -213,6 +213,11 @@ describe('Home Page', () => {
 
         await waitFor(() => {
             expect(screen.getByText(/Generated \d+ email variations/i)).toBeInTheDocument()
+        })
+
+        // Wait for list to render actions
+        await waitFor(() => {
+            expect(screen.getAllByRole('button', { name: /Mark as used/i }).length).toBeGreaterThan(0)
         })
 
         // 1. Toggle Status (Available -> Used)

@@ -7,7 +7,8 @@ describe('Root Layout', () => {
         render(
             <RootLayout>
                 <div data-testid="test-child">Test Content</div>
-            </RootLayout>
+            </RootLayout>,
+            { container: document.body }
         )
 
         expect(screen.getByTestId('test-child')).toBeInTheDocument()
@@ -18,7 +19,8 @@ describe('Root Layout', () => {
         const { container } = render(
             <RootLayout>
                 <div>Content</div>
-            </RootLayout>
+            </RootLayout>,
+            { container: document.body }
         )
 
         // Note: In JSDOM, we are usually already inside an html/body, 
