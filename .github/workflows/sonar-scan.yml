@@ -1,0 +1,32 @@
+name: SonarCloud Scan
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  sonarcloud:
+    name: SonarCloud
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Penting untuk analisis yang akurat
+
+      - name: Install Dependencies
+        run: npm install
+
+      # Langkah ini menjalankan tes Jest & generate coverage report
+      # Sesuai script "test:coverage" di package.json kamu
+      - name: Run Tests with Coverage
+        run: npm run test:coverage
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Otomatis dari GitHub
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    # Yang kamu set tadi
