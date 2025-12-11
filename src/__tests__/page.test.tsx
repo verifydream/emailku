@@ -33,6 +33,10 @@ Object.defineProperty(window, 'matchMedia', {
     })),
 })
 
+// Mock URL.createObjectURL and URL.revokeObjectURL
+global.URL.createObjectURL = jest.fn(() => 'blob:mock-url')
+global.URL.revokeObjectURL = jest.fn()
+
 describe('Home Page', () => {
     beforeEach(() => {
         // Reset mocks
@@ -116,7 +120,6 @@ describe('Home Page', () => {
         })
 
         // Press Ctrl + R (Pick Random)
-        // Need to ensure the component is focused or window receives event
         fireEvent.keyDown(window, { key: 'r', ctrlKey: true })
 
         // Should call crypto
@@ -167,4 +170,84 @@ describe('Home Page', () => {
         expect(screen.queryByText('Shortcuts')).not.toBeInTheDocument()
     })
 
+    test('toggles dark mode', () => {
+        render(<Home />)
+        const toggleBtn = screen.getByLabelText('Toggle dark mode')
+
+        // Initial state
+        expect(document.documentElement.classList.contains('dark')).toBeFalsy()
+
+        // Toggle
+        fireEvent.click(toggleBtn)
+    })
+
+    test('search and pagination', async () => {
+        render(<Home />)
+
+        // Generate many emails
+        const input = screen.getByPlaceholderText('Enter Gmail address...')
+        fireEvent.change(input, { target: { value: 'long.email.address.test@gmail.com' } })
+        fireEvent.click(screen.getByRole('button', { name: 'GENERATE' }))
+
+        await waitFor(() => {
+            expect(screen.getByText(/Generated \d+ email variations/i)).toBeInTheDocument()
+        })
+
+        // Search
+        const searchInput = screen.getByPlaceholderText('Search emails...')
+        fireEvent.change(searchInput, { target: { value: 'l.o.n.g' } })
+
+        // Pagination
+        const pageSizeSelect = screen.getByRole('combobox', { name: /Show items per page/i })
+        fireEvent.change(pageSizeSelect, { target: { value: '25' } })
+        expect(pageSizeSelect).toHaveValue('25')
+    })
+
+    test('email actions: delete, status', async () => {
+        render(<Home />)
+
+        // Generate 
+        const input = screen.getByPlaceholderText('Enter Gmail address...')
+        fireEvent.change(input, { target: { value: 'abc@gmail.com' } })
+        fireEvent.click(screen.getByRole('button', { name: 'GENERATE' }))
+
+        await waitFor(() => {
+            expect(screen.getByText(/Generated \d+ email variations/i)).toBeInTheDocument()
+        })
+
+        // 1. Toggle Status (Available -> Used)
+        const statusBtn = screen.getAllByRole('button', { name: /Mark as used/i })[0]
+        fireEvent.click(statusBtn)
+
+        await waitFor(() => {
+            expect(window.localStorage.setItem).toHaveBeenCalled()
+        })
+
+        // 3. Delete Single
+        const deleteBtns = screen.getAllByRole('button', { name: /Delete email/i })
+
+        window.confirm = jest.fn(() => true) // Mock confirm
+        fireEvent.click(deleteBtns[0])
+
+        await waitFor(() => {
+            expect(window.localStorage.setItem).toHaveBeenCalled()
+            expect(screen.getByText('Email deleted')).toBeInTheDocument()
+        })
+    })
+
+    test('csv export', async () => {
+        render(<Home />)
+        // Generate
+        const input = screen.getByPlaceholderText('Enter Gmail address...')
+        fireEvent.change(input, { target: { value: 'abc@gmail.com' } })
+        fireEvent.click(screen.getByRole('button', { name: 'GENERATE' }))
+
+        await waitFor(() => expect(screen.getByText(/Generated/i)).toBeInTheDocument())
+
+        // Click Export (Trigger via shortcut key as button might be icon-only or hidden)
+        fireEvent.keyDown(window, { key: 'e', ctrlKey: true })
+
+        expect(global.URL.createObjectURL).toHaveBeenCalled()
+        expect(screen.getByText('CSV exported!')).toBeInTheDocument()
+    })
 })

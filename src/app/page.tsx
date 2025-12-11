@@ -1199,6 +1199,7 @@ export default function Home() {
                     >
                       <button
                         onClick={() => copyToClipboard(email.generatedEmail, email.id)}
+                        aria-label={copied === email.id ? "Copied" : "Copy to clipboard"}
                         className={`p-2 border-2 border-black transition-all duration-100 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${copied === email.id
                           ? 'bg-[#22c55e] text-white'
                           : 'bg-white text-black'
@@ -1208,12 +1209,14 @@ export default function Home() {
                       </button>
                       <button
                         onClick={() => openGmail(email.generatedEmail)}
+                        aria-label="Open in Gmail"
                         className="p-2 bg-[#3b82f6] text-white border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all duration-100"
                       >
                         <span className="w-4 h-4 block">{Icons.mail}</span>
                       </button>
                       <button
                         onClick={() => { setEditingEmailId(email.id); setNoteText(email.note || '') }}
+                        aria-label="Add note"
                         className={`p-2 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all duration-100 ${(email.note || (email.tags && email.tags.length > 0))
                           ? 'bg-[#f59e0b] text-black'
                           : 'bg-white text-black'
@@ -1223,6 +1226,7 @@ export default function Home() {
                       </button>
                       <button
                         onClick={() => toggleUsed(email.id, email.isUsed)}
+                        aria-label={email.isUsed ? "Mark as available" : "Mark as used"}
                         className={`p-2 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all duration-100 ${email.isUsed
                           ? 'bg-[#22c55e] text-white'
                           : 'bg-white text-black'
@@ -1232,6 +1236,7 @@ export default function Home() {
                       </button>
                       <button
                         onClick={() => handleDeleteEmail(email.id)}
+                        aria-label="Delete email"
                         className="p-2 bg-white text-black border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-[#ef4444] hover:text-white active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all duration-100"
                       >
                         <span className="w-4 h-4 block">{Icons.trash}</span>
@@ -1268,7 +1273,7 @@ export default function Home() {
                             }}
                             autoFocus
                           />
-                          <button onClick={() => handleSaveNote(email.id)} className="px-3 sm:px-4 py-2 bg-[#3b82f6] text-white text-xs sm:text-sm font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all">
+                          <button onClick={() => handleSaveNote(email.id)} aria-label="Save note" className="px-3 sm:px-4 py-2 bg-[#3b82f6] text-white text-xs sm:text-sm font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all">
                             SAVE
                           </button>
                         </div>
@@ -1288,7 +1293,7 @@ export default function Home() {
                               if (e.key === 'Enter') handleAddTag(email.id)
                             }}
                           />
-                          <button onClick={() => handleAddTag(email.id)} className="px-3 sm:px-4 py-2 bg-white text-black text-xs sm:text-sm font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all">
+                          <button onClick={() => handleAddTag(email.id)} aria-label="Add tag" className="px-3 sm:px-4 py-2 bg-white text-black text-xs sm:text-sm font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all">
                             ADD
                           </button>
                         </div>
@@ -1296,7 +1301,7 @@ export default function Home() {
                           {email.tags && email.tags.map(tag => (
                             <span key={tag} className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold bg-white border border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] sm:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black">
                               {tag.toUpperCase()}
-                              <button onClick={() => handleRemoveTag(email.id, tag)} className="hover:text-red-500 font-black">×</button>
+                              <button onClick={() => handleRemoveTag(email.id, tag)} aria-label={`Remove tag ${tag}`} className="hover:text-red-500 font-black">×</button>
                             </span>
                           ))}
                         </div>

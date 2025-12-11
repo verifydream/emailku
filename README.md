@@ -2,7 +2,7 @@
 
 # emailku.
 
-![emailku banner](./images/banner.png)
+![emailku banner](./docs/images/banner.png)
 
 ### Generate Unlimited Email Variations with Style
 
@@ -22,7 +22,7 @@
 <div align="center">
 
 ### Homepage
-![Homepage Preview](./images/preview-homepage.png)
+![Homepage Preview](./docs/images/preview-homepage.png)
 
 </div>
 
@@ -32,13 +32,13 @@
 <br>
 
 ### Dot Mode - Email Variations
-![Dot Mode Preview](./images/preview-email-dot.png)
+![Dot Mode Preview](./docs/images/preview-email-dot.png)
 
 ### Plus Mode - Tagged Emails  
-![Plus Mode Preview](./images/preview-email-tags.png)
+![Plus Mode Preview](./docs/images/preview-email-tags.png)
 
 ### Master Tags Management
-![Master Tags Preview](./images/preview-master-tags.png)
+![Master Tags Preview](./docs/images/preview-master-tags.png)
 
 </details>
 
