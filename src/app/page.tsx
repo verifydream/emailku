@@ -73,15 +73,11 @@ const CustomNeoSelect = ({
 
       {isOpen && (
         <>
-          <div
-            className="fixed inset-0"
+          <button
+            type="button"
+            className="fixed inset-0 w-full h-full cursor-default focus:outline-none"
             style={{ zIndex: 9998 }}
             onClick={() => setIsOpen(false)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') setIsOpen(false)
-            }}
             aria-label="Close select menu"
           />
           <div
@@ -554,17 +550,14 @@ export default function Home() {
 
       {/* Shortcuts Modal */}
       {showShortcuts && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-4"
-          onClick={() => setShowShortcuts(false)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') setShowShortcuts(false)
-          }}
-          aria-label="Close shortcuts modal"
-        >
-          <div className="neo-card p-5 sm:p-8 max-w-md w-full animate-fade-in" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4">
+          <button
+            type="button"
+            className="absolute inset-0 w-full h-full bg-black/60 backdrop-blur-sm cursor-default focus:outline-none"
+            onClick={() => setShowShortcuts(false)}
+            aria-label="Close shortcuts modal"
+          />
+          <div className="relative neo-card p-5 sm:p-8 max-w-md w-full animate-fade-in" onClick={e => e.stopPropagation()}>
             <h3 className="text-xl sm:text-2xl font-black mb-4 sm:mb-6 uppercase tracking-wider text-black dark:text-white">Shortcuts</h3>
             <div className="space-y-3 sm:space-y-4">
               {[
@@ -589,17 +582,14 @@ export default function Home() {
 
       {/* Settings Modal */}
       {showSettings && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-4"
-          onClick={() => setShowSettings(false)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') setShowSettings(false)
-          }}
-          aria-label="Close settings modal"
-        >
-          <div className="neo-card p-5 sm:p-8 max-w-md w-full animate-fade-in border-3 border-black" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4">
+          <button
+            type="button"
+            className="absolute inset-0 w-full h-full bg-black/60 backdrop-blur-sm cursor-default focus:outline-none"
+            onClick={() => setShowSettings(false)}
+            aria-label="Close settings modal"
+          />
+          <div className="relative neo-card p-5 sm:p-8 max-w-md w-full animate-fade-in border-3 border-black" onClick={e => e.stopPropagation()}>
             <h3 className="text-xl sm:text-2xl font-black mb-4 sm:mb-6 uppercase tracking-wider text-black dark:text-white flex items-center gap-2 sm:gap-3">
               <span className="w-5 h-5 sm:w-6 sm:h-6">{Icons.settings}</span> Master Tags
             </h3>
@@ -661,17 +651,14 @@ export default function Home() {
 
       {/* Delete Confirmation Modal */}
       {deleteModal.show && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-4"
-          onClick={() => setDeleteModal({ ...deleteModal, show: false })}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') setDeleteModal({ ...deleteModal, show: false })
-          }}
-          aria-label="Close delete modal"
-        >
-          <div className="neo-card p-5 sm:p-8 max-w-md w-full animate-fade-in border-3 border-black" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4">
+          <button
+            type="button"
+            className="absolute inset-0 w-full h-full bg-black/60 backdrop-blur-sm cursor-default focus:outline-none"
+            onClick={() => setDeleteModal({ ...deleteModal, show: false })}
+            aria-label="Close delete modal"
+          />
+          <div className="relative neo-card p-5 sm:p-8 max-w-md w-full animate-fade-in border-3 border-black" onClick={e => e.stopPropagation()}>
             <div className="flex flex-col items-center text-center mb-4 sm:mb-6">
               <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#dc2626] rounded-full border-3 border-black flex items-center justify-center mb-4 sm:mb-6 text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                 <svg className="w-8 h-8 sm:w-10 sm:h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -1155,7 +1142,6 @@ export default function Home() {
                       <div
                         className="hidden sm:flex items-center gap-1.5 shrink-0"
                         onClick={e => e.stopPropagation()}
-                        role="presentation"
                       >
                         <button
                           onClick={() => copyToClipboard(email.generatedEmail, email.id)}
@@ -1210,7 +1196,6 @@ export default function Home() {
                     <div
                       className="flex sm:hidden items-center gap-1.5 mt-2"
                       onClick={e => e.stopPropagation()}
-                      role="presentation"
                     >
                       <button
                         onClick={() => copyToClipboard(email.generatedEmail, email.id)}
@@ -1266,7 +1251,6 @@ export default function Home() {
                     <div
                       className="mt-2 sm:mt-3 animate-fade-in p-3 sm:p-4 bg-white border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] sm:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
                       onClick={e => e.stopPropagation()}
-                      role="presentation"
                     >
                       <div className="mb-3">
                         <label htmlFor={`note-${email.id}`} className="text-[10px] sm:text-xs font-black text-black uppercase mb-1 block">Note</label>

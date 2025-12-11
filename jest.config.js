@@ -13,6 +13,7 @@ const config = {
     setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
     collectCoverageFrom: [
         'src/lib/**/*.ts',
+        'src/app/**/*.tsx',
         '!src/**/*.d.ts',
     ],
     coverageDirectory: 'coverage',
@@ -24,7 +25,8 @@ const config = {
     ],
     transform: {
         '^.+\\.(ts|tsx)$': ['ts-jest', {
-            tsconfig: 'tsconfig.json'
+            tsconfig: 'tsconfig.test.json',
+            isolatedModules: true
         }]
     },
 }
