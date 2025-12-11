@@ -1,19 +1,19 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { 
-  getEmails, 
-  saveEmails, 
-  addEmails, 
-  updateEmail, 
-  deleteEmail as deleteEmailStorage, 
+import {
+  getEmails,
+  saveEmails,
+  addEmails,
+  updateEmail,
+  deleteEmail as deleteEmailStorage,
   deleteEmailsByBase,
   deleteAllEmails,
   getMasterTags,
   addMasterTag,
   removeMasterTag,
   saveMasterTags,
-  Email 
+  Email
 } from '@/lib/storage'
 import { generateVariations, isValidGmail, GenerationMode } from '@/lib/generator'
 
@@ -44,16 +44,16 @@ const Icons = {
   menu: <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 6h16M4 12h16M4 18h16" /></svg>,
 }
 
-const CustomNeoSelect = ({ 
-  value, 
-  onChange, 
-  options, 
-  placeholder = "Select" 
-}: { 
-  value: string; 
-  onChange: (val: string) => void; 
-  options: string[]; 
-  placeholder?: string 
+const CustomNeoSelect = ({
+  value,
+  onChange,
+  options,
+  placeholder = "Select"
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  options: string[];
+  placeholder?: string
 }) => {
   const [isOpen, setIsOpen] = useState(false)
 
@@ -74,7 +74,7 @@ const CustomNeoSelect = ({
       {isOpen && (
         <>
           <div className="fixed inset-0" style={{ zIndex: 9998 }} onClick={() => setIsOpen(false)} />
-          <div 
+          <div
             className="absolute top-full left-0 right-0 mt-2 max-h-60 overflow-y-auto border-3 border-black dark:border-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
             style={{ zIndex: 9999 }}
           >
@@ -85,11 +85,10 @@ const CustomNeoSelect = ({
                   onChange(option)
                   setIsOpen(false)
                 }}
-                className={`w-full text-left px-4 md:px-6 py-3 md:py-4 font-bold transition-colors text-sm md:text-base border-b-2 border-black dark:border-white last:border-b-0 ${
-                  value === option 
-                    ? 'bg-black dark:bg-white text-white dark:text-black' 
+                className={`w-full text-left px-4 md:px-6 py-3 md:py-4 font-bold transition-colors text-sm md:text-base border-b-2 border-black dark:border-white last:border-b-0 ${value === option
+                    ? 'bg-black dark:bg-white text-white dark:text-black'
                     : 'bg-white dark:bg-slate-800 text-black dark:text-white hover:bg-[#3b82f6] hover:text-white'
-                }`}
+                  }`}
               >
                 {option.toUpperCase()}
               </button>
@@ -150,7 +149,7 @@ export default function Home() {
     loadMasterTags()
     const savedItemsPerPage = localStorage.getItem('itemsPerPage')
     if (savedItemsPerPage) setItemsPerPage(parseInt(savedItemsPerPage))
-    const isDark = localStorage.getItem('darkMode') === 'true' || 
+    const isDark = localStorage.getItem('darkMode') === 'true' ||
       window.matchMedia('(prefers-color-scheme: dark)').matches
     setDarkMode(isDark)
   }, [])
@@ -191,7 +190,7 @@ export default function Home() {
 
   const handleGenerate = () => {
     if (!inputEmail) return
-    
+
     if (!isValidGmail(inputEmail)) {
       showToast('Invalid Gmail address', 'error')
       return
@@ -203,12 +202,12 @@ export default function Home() {
     }
 
     setLoading(true)
-    
+
     try {
       const variations = generateVariations(inputEmail, genMode, inputTag.trim())
       const baseEmail = inputEmail.toLowerCase().replace(/\./g, '').replace('@gmailcom', '@gmail.com')
       const now = new Date().toISOString()
-      
+
       const newEmails = variations.map(generatedEmail => ({
         baseEmail,
         generatedEmail,
@@ -221,10 +220,10 @@ export default function Home() {
 
       const result = addEmails(newEmails)
       loadEmails()
-      
+
       // Switch to the new email group
       setActiveBaseEmail(baseEmail)
-      
+
       showToast(`Generated ${result.inserted} email variations!`, 'success')
       setInputEmail('')
       setCurrentPage(1)
@@ -236,9 +235,9 @@ export default function Home() {
   }
 
   const toggleUsed = (id: number, currentStatus: boolean) => {
-    updateEmail(id, { 
-      isUsed: !currentStatus, 
-      usedAt: !currentStatus ? new Date().toISOString() : null 
+    updateEmail(id, {
+      isUsed: !currentStatus,
+      usedAt: !currentStatus ? new Date().toISOString() : null
     })
     loadEmails()
   }
@@ -303,16 +302,16 @@ export default function Home() {
   const handleRemoveTag = (id: number, tagToRemove: string) => {
     const email = emails.find(e => e.id === id)
     if (email) {
-       const currentTags = email.tags || []
-       updateEmail(id, { tags: currentTags.filter(t => t !== tagToRemove) })
-       loadEmails()
+      const currentTags = email.tags || []
+      updateEmail(id, { tags: currentTags.filter(t => t !== tagToRemove) })
+      loadEmails()
     }
   }
 
   const pickRandom = () => {
     // Filter by active tab + availability
-    const available = emails.filter(e => 
-      !e.isUsed && 
+    const available = emails.filter(e =>
+      !e.isUsed &&
       (activeBaseEmail === 'all' || e.baseEmail === activeBaseEmail)
     )
 
@@ -321,11 +320,11 @@ export default function Home() {
       return
     }
     const random = available[Math.floor(Math.random() * available.length)]
-    
+
     // Mark as used immediately
     updateEmail(random.id, { isUsed: true, usedAt: new Date().toISOString() })
     loadEmails()
-    
+
     copyToClipboard(random.generatedEmail, random.id)
     showToast(`Copied & marked used: ${random.generatedEmail}`, 'success')
   }
@@ -351,10 +350,10 @@ export default function Home() {
   }
 
   const markAllUsed = () => {
-    const targets = selectMode && selectedEmails.size > 0 
+    const targets = selectMode && selectedEmails.size > 0
       ? filteredEmails.filter(e => selectedEmails.has(e.id) && !e.isUsed)
       : filteredEmails.filter(e => !e.isUsed)
-    
+
     if (targets.length === 0) {
       showToast('No available emails to mark', 'info')
       return
@@ -372,7 +371,7 @@ export default function Home() {
   const deleteSelected = () => {
     if (selectedEmails.size === 0) return
     if (!confirm(`Delete ${selectedEmails.size} selected emails?`)) return
-    
+
     const idsToDelete = Array.from(selectedEmails)
     for (const id of idsToDelete) {
       deleteEmailStorage(id)
@@ -402,7 +401,7 @@ export default function Home() {
 
   const filteredEmails = useMemo(() => emails.filter(email => {
     const matchesBase = activeBaseEmail === 'all' || email.baseEmail === activeBaseEmail
-    const matchesFilter = 
+    const matchesFilter =
       filter === 'all' ||
       (filter === 'available' && !email.isUsed) ||
       (filter === 'used' && email.isUsed)
@@ -446,8 +445,8 @@ export default function Home() {
     // Calculate stats based on ALL emails if 'all' is selected, or filtered by baseEmail otherwise
     // But usually global stats are useful, or stats per group?
     // Let's make stats reflect the CURRENT VIEW
-    const currentViewEmails = activeBaseEmail === 'all' 
-      ? emails 
+    const currentViewEmails = activeBaseEmail === 'all'
+      ? emails
       : emails.filter(e => e.baseEmail === activeBaseEmail)
 
     return {
@@ -475,7 +474,7 @@ export default function Home() {
 
   const highlightDots = (email: string) => {
     const [local, domain] = email.split('@')
-    const highlighted = local.split('').map((char, i) => 
+    const highlighted = local.split('').map((char, i) =>
       char === '.' ? <span key={i} className="text-[#3b82f6] font-black">.</span> : char
     )
     return <>{highlighted}<span className="text-slate-400">@{domain}</span></>
@@ -513,12 +512,12 @@ export default function Home() {
       { bg: 'bg-[#ef4444]', border: 'border-black' }, // Red
       { bg: 'bg-[#3b82f6]', border: 'border-black' }, // Blue
     ]
-    
+
     // Simple hash to pick color index
     let hash = 0;
     for (let i = 0; i < base.length; i++) hash = base.charCodeAt(i) + ((hash << 5) - hash);
     const index = Math.abs(hash) % colors.length;
-    
+
     if (isActive) {
       return `${colors[index].bg} text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]`
     }
@@ -530,11 +529,10 @@ export default function Home() {
       {/* Toast */}
       {toast && (
         <div className="fixed top-4 right-4 z-[100] animate-slide-down">
-          <div className={`px-6 py-4 rounded-none border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-3 ${
-            toast.type === 'success' ? 'bg-[#22c55e] text-white' :
-            toast.type === 'error' ? 'bg-[#ef4444] text-white' :
-            'bg-white text-black'
-          }`}>
+          <div className={`px-6 py-4 rounded-none border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-3 ${toast.type === 'success' ? 'bg-green-600 text-white' :
+              toast.type === 'error' ? 'bg-red-600 text-white' :
+                'bg-white text-black'
+            }`}>
             {toast.type === 'success' && Icons.check}
             {toast.type === 'error' && <span className="font-black text-xl">!</span>}
             <span className="font-bold">{toast.message}</span>
@@ -572,60 +570,61 @@ export default function Home() {
       {showSettings && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-4" onClick={() => setShowSettings(false)}>
           <div className="neo-card p-5 sm:p-8 max-w-md w-full animate-fade-in border-3 border-black" onClick={e => e.stopPropagation()}>
-             <h3 className="text-xl sm:text-2xl font-black mb-4 sm:mb-6 uppercase tracking-wider text-black dark:text-white flex items-center gap-2 sm:gap-3">
-               <span className="w-5 h-5 sm:w-6 sm:h-6">{Icons.settings}</span> Master Tags
-             </h3>
-             
-             <div className="flex gap-2 mb-4 sm:mb-6">
-                <input
-                   type="text"
-                   value={newMasterTag}
-                   onChange={(e) => setNewMasterTag(e.target.value)}
-                   onKeyDown={(e) => e.key === 'Enter' && handleAddMasterTag()}
-                   placeholder="Add new tag..."
-                   className="flex-1 px-3 sm:px-4 py-2 border-2 border-black outline-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:translate-x-[1px] focus:translate-y-[1px] focus:shadow-none transition-all text-black text-sm sm:text-base"
-                   autoFocus
-                />
-                <button 
-                  onClick={handleAddMasterTag}
-                  className="px-3 sm:px-4 py-2 bg-[#22c55e] text-white font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all text-sm sm:text-base"
-                >
-                  ADD
-                </button>
-             </div>
+            <h3 className="text-xl sm:text-2xl font-black mb-4 sm:mb-6 uppercase tracking-wider text-black dark:text-white flex items-center gap-2 sm:gap-3">
+              <span className="w-5 h-5 sm:w-6 sm:h-6">{Icons.settings}</span> Master Tags
+            </h3>
 
-             <div className="max-h-48 sm:max-h-60 overflow-y-auto mb-4 sm:mb-6 pr-1 sm:pr-2 space-y-1.5 sm:space-y-2">
-                {masterTags.length === 0 ? (
-                  <p className="text-slate-500 italic text-center text-sm">No tags found.</p>
-                ) : (
-                  masterTags.map(tag => (
-                    <div key={tag} className="flex justify-between items-center bg-white dark:bg-slate-700 p-1.5 sm:p-2 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                       <span className="font-bold text-black dark:text-white uppercase px-1.5 sm:px-2 text-sm sm:text-base">{tag}</span>
-                       <button 
-                         onClick={() => handleRemoveMasterTag(tag)}
-                         className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-[#ef4444] text-white font-black border-2 border-black hover:bg-red-600 transition-colors text-sm"
-                       >
-                         ×
-                       </button>
-                    </div>
-                  ))
-                )}
-             </div>
+            <div className="flex gap-2 mb-4 sm:mb-6">
+              <input
+                type="text"
+                value={newMasterTag}
+                onChange={(e) => setNewMasterTag(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddMasterTag()}
+                placeholder="Add new tag..."
+                className="flex-1 px-3 sm:px-4 py-2 border-2 border-black outline-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:translate-x-[1px] focus:translate-y-[1px] focus:shadow-none transition-all text-black text-sm sm:text-base"
+                autoFocus
+              />
+              <button
+                onClick={handleAddMasterTag}
+                className="px-3 sm:px-4 py-2 bg-green-600 text-white font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all text-sm sm:text-base"
+              >
+                ADD
+              </button>
+            </div>
 
-             <div className="flex gap-2 sm:gap-4">
-                <button 
-                  onClick={handleResetMasterTags}
-                  className="flex-1 py-2 px-3 sm:px-4 border-2 border-black bg-white hover:bg-slate-100 text-black font-bold text-xs sm:text-sm"
-                >
-                  Reset
-                </button>
-                <button 
-                  onClick={() => setShowSettings(false)}
-                  className="flex-1 py-2.5 sm:py-3 px-3 sm:px-4 neo-btn bg-black text-white text-sm sm:text-base"
-                >
-                  Done
-                </button>
-             </div>
+            <div className="max-h-48 sm:max-h-60 overflow-y-auto mb-4 sm:mb-6 pr-1 sm:pr-2 space-y-1.5 sm:space-y-2">
+              {masterTags.length === 0 ? (
+                <p className="text-slate-500 italic text-center text-sm">No tags found.</p>
+              ) : (
+                masterTags.map(tag => (
+                  <div key={tag} className="flex justify-between items-center bg-white dark:bg-slate-700 p-1.5 sm:p-2 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                    <span className="font-bold text-black dark:text-white uppercase px-1.5 sm:px-2 text-sm sm:text-base">{tag}</span>
+                    <button
+                      onClick={() => handleRemoveMasterTag(tag)}
+                      className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center bg-[#dc2626] text-white font-black border-2 border-black hover:bg-red-700 transition-colors text-sm"
+                      aria-label={`Remove tag ${tag}`}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="flex gap-2 sm:gap-4">
+              <button
+                onClick={handleResetMasterTags}
+                className="flex-1 py-2 px-3 sm:px-4 border-2 border-black bg-white hover:bg-slate-100 text-black font-bold text-xs sm:text-sm"
+              >
+                Reset
+              </button>
+              <button
+                onClick={() => setShowSettings(false)}
+                className="flex-1 py-2.5 sm:py-3 px-3 sm:px-4 neo-btn bg-black text-white text-sm sm:text-base"
+              >
+                Done
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -635,8 +634,8 @@ export default function Home() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-4" onClick={() => setDeleteModal({ ...deleteModal, show: false })}>
           <div className="neo-card p-5 sm:p-8 max-w-md w-full animate-fade-in border-3 border-black" onClick={e => e.stopPropagation()}>
             <div className="flex flex-col items-center text-center mb-4 sm:mb-6">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#ef4444] rounded-full border-3 border-black flex items-center justify-center mb-4 sm:mb-6 text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                <svg className="w-8 h-8 sm:w-10 sm:h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#dc2626] rounded-full border-3 border-black flex items-center justify-center mb-4 sm:mb-6 text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <svg className="w-8 h-8 sm:w-10 sm:h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
               </div>
@@ -644,20 +643,20 @@ export default function Home() {
                 {deleteModal.type === 'group' ? 'Delete Group?' : 'Delete All?'}
               </h3>
               <p className="font-medium text-slate-600 dark:text-slate-300 text-sm sm:text-base">
-                {deleteModal.type === 'group' 
+                {deleteModal.type === 'group'
                   ? `Delete all emails for "${activeBaseEmail.split('@')[0]}@..."?`
                   : 'Delete ALL emails from ALL groups?'}
-                <br/>This cannot be undone.
+                <br />This cannot be undone.
               </p>
             </div>
             <div className="flex gap-2 sm:gap-4">
-              <button 
+              <button
                 onClick={() => setDeleteModal({ ...deleteModal, show: false })}
                 className="flex-1 py-2.5 sm:py-3 px-3 sm:px-4 neo-btn bg-white hover:bg-slate-100 text-black text-sm sm:text-base"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={confirmDelete}
                 className="flex-1 py-2.5 sm:py-3 px-3 sm:px-4 neo-btn neo-btn-danger text-sm sm:text-base"
               >
@@ -683,17 +682,19 @@ export default function Home() {
                   Generate unlimited email variations
                 </span>
                 <div className="h-6 w-0.5 bg-black/20 dark:bg-white/20 mx-1"></div>
-                <button 
+                <button
                   onClick={() => setShowShortcuts(true)}
                   className="w-8 h-8 flex shrink-0 items-center justify-center bg-[#f59e0b] text-black font-black text-xl border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all"
                   title="Keyboard shortcuts"
+                  aria-label="Show keyboard shortcuts"
                 >
                   ?
                 </button>
-                <button 
+                <button
                   onClick={() => setShowSettings(true)}
                   className="w-8 h-8 flex shrink-0 items-center justify-center bg-[#a855f7] text-white font-black text-xl border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all"
                   title="Master Tag Settings"
+                  aria-label="Master Tag Settings"
                 >
                   {Icons.settings}
                 </button>
@@ -711,6 +712,7 @@ export default function Home() {
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-2 neo-btn bg-white dark:bg-slate-800 text-black dark:text-white"
+              aria-label="Toggle mobile menu"
             >
               {Icons.menu}
             </button>
@@ -724,14 +726,14 @@ export default function Home() {
                   Generate unlimited email variations
                 </span>
                 <div className="flex justify-center gap-3">
-                  <button 
+                  <button
                     onClick={() => setShowShortcuts(true)}
                     className="w-full py-3 flex items-center justify-center gap-2 bg-[#f59e0b] text-black font-black text-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all"
                   >
                     <span>SHORTCUTS</span>
                     <span className="bg-black text-white px-1.5 rounded-sm">?</span>
                   </button>
-                  <button 
+                  <button
                     onClick={() => setShowSettings(true)}
                     className="w-full py-3 flex items-center justify-center gap-2 bg-[#a855f7] text-white font-black text-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all"
                   >
@@ -762,13 +764,15 @@ export default function Home() {
                   value={inputEmail}
                   onChange={(e) => setInputEmail(e.target.value)}
                   placeholder="Enter Gmail address..."
+                  aria-label="Email address"
                   className="neo-input w-full px-4 sm:px-6 py-3 md:py-4 text-base sm:text-lg md:text-xl"
                   onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
                 />
                 {inputEmail && (
-                  <button 
+                  <button
                     onClick={() => setInputEmail('')}
                     className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 font-bold text-lg"
+                    aria-label="Clear email input"
                   >
                     ×
                   </button>
@@ -776,17 +780,17 @@ export default function Home() {
               </div>
 
               {(genMode === 'plus' || genMode === 'mixed') && (
-                 <div className="w-full md:w-48 lg:w-56 relative animate-fade-in" style={{ zIndex: 60 }}>
-                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black text-lg md:text-xl pointer-events-none" style={{ zIndex: 1 }}>
-                     +
-                   </div>
-                   <CustomNeoSelect
-                     value={inputTag}
-                     onChange={setInputTag}
-                     options={masterTags}
-                     placeholder="Select Tag"
-                   />
-                 </div>
+                <div className="w-full md:w-48 lg:w-56 relative animate-fade-in" style={{ zIndex: 60 }}>
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black text-lg md:text-xl pointer-events-none" style={{ zIndex: 1 }}>
+                    +
+                  </div>
+                  <CustomNeoSelect
+                    value={inputTag}
+                    onChange={setInputTag}
+                    options={masterTags}
+                    placeholder="Select Tag"
+                  />
+                </div>
               )}
 
               <button
@@ -797,8 +801,8 @@ export default function Home() {
                 {loading ? (
                   <>
                     <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
                     <span>Generating...</span>
                   </>
@@ -812,36 +816,33 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-3">
-               <button 
-                  onClick={() => setGenMode('dot')}
-                  className={`px-2 sm:px-4 md:px-6 py-2.5 sm:py-3 rounded-none font-bold border-2 border-black transition-all text-xs sm:text-sm md:text-base ${
-                    genMode === 'dot' 
-                    ? 'bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]' 
+              <button
+                onClick={() => setGenMode('dot')}
+                className={`px-2 sm:px-4 md:px-6 py-2.5 sm:py-3 rounded-none font-bold border-2 border-black transition-all text-xs sm:text-sm md:text-base ${genMode === 'dot'
+                    ? 'bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]'
                     : 'bg-white text-black hover:bg-slate-50'
                   }`}
-               >
-                 Dot Only
-               </button>
-               <button 
-                  onClick={() => setGenMode('plus')}
-                  className={`px-2 sm:px-4 md:px-6 py-2.5 sm:py-3 rounded-none font-bold border-2 border-black transition-all text-xs sm:text-sm md:text-base ${
-                    genMode === 'plus' 
-                    ? 'bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]' 
+              >
+                Dot Only
+              </button>
+              <button
+                onClick={() => setGenMode('plus')}
+                className={`px-2 sm:px-4 md:px-6 py-2.5 sm:py-3 rounded-none font-bold border-2 border-black transition-all text-xs sm:text-sm md:text-base ${genMode === 'plus'
+                    ? 'bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]'
                     : 'bg-white text-black hover:bg-slate-50'
                   }`}
-               >
-                 Plus Only
-               </button>
-               <button 
-                  onClick={() => setGenMode('mixed')}
-                  className={`px-2 sm:px-4 md:px-6 py-2.5 sm:py-3 rounded-none font-bold border-2 border-black transition-all text-xs sm:text-sm md:text-base ${
-                    genMode === 'mixed' 
-                    ? 'bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]' 
+              >
+                Plus Only
+              </button>
+              <button
+                onClick={() => setGenMode('mixed')}
+                className={`px-2 sm:px-4 md:px-6 py-2.5 sm:py-3 rounded-none font-bold border-2 border-black transition-all text-xs sm:text-sm md:text-base ${genMode === 'mixed'
+                    ? 'bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]'
                     : 'bg-white text-black hover:bg-slate-50'
                   }`}
-               >
-                 Mixed
-               </button>
+              >
+                Mixed
+              </button>
             </div>
           </div>
         </section>
@@ -851,8 +852,8 @@ export default function Home() {
           <section className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6 mb-6 md:mb-8 animate-fade-in-up relative" style={{ animationDelay: '0.1s', zIndex: 1 }}>
             {[
               { label: 'TOTAL', value: stats.total, color: 'bg-white dark:bg-slate-800', labelColor: 'text-black dark:text-white', valueColor: 'text-black dark:text-white' },
-              { label: 'AVAILABLE', value: stats.available, color: 'bg-white dark:bg-slate-800', labelColor: 'text-[#22c55e]', valueColor: 'text-[#22c55e]' },
-              { label: 'USED', value: stats.used, color: 'bg-white dark:bg-slate-800', labelColor: 'text-[#ef4444]', valueColor: 'text-[#ef4444]' },
+              { label: 'AVAILABLE', value: stats.available, color: 'bg-white dark:bg-slate-800', labelColor: 'text-green-700 dark:text-green-500', valueColor: 'text-green-700 dark:text-green-500' },
+              { label: 'USED', value: stats.used, color: 'bg-white dark:bg-slate-800', labelColor: 'text-red-700 dark:text-red-500', valueColor: 'text-red-700 dark:text-red-500' },
             ].map((stat) => (
               <div key={stat.label} className={`neo-card p-3 sm:p-4 md:p-6 text-center ${stat.color}`}>
                 <div className={`text-2xl sm:text-3xl md:text-4xl font-black mb-0.5 md:mb-1 ${stat.valueColor}`}>{stat.value}</div>
@@ -878,28 +879,27 @@ export default function Home() {
         {/* Base Email Tabs */}
         {baseEmails.length > 0 && (
           <section className="mb-6 md:mb-8 animate-fade-in-up overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0" style={{ animationDelay: '0.18s' }}>
-             <div className="flex gap-2 sm:gap-3">
-                <button
-                  onClick={() => setActiveBaseEmail('all')}
-                  className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded-none font-bold border-2 border-black whitespace-nowrap transition-all text-xs sm:text-sm md:text-base ${
-                    activeBaseEmail === 'all'
-                      ? 'bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]'
-                      : 'bg-white text-black hover:bg-slate-50'
+            <div className="flex gap-2 sm:gap-3">
+              <button
+                onClick={() => setActiveBaseEmail('all')}
+                className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded-none font-bold border-2 border-black whitespace-nowrap transition-all text-xs sm:text-sm md:text-base ${activeBaseEmail === 'all'
+                    ? 'bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]'
+                    : 'bg-white text-black hover:bg-slate-50'
                   }`}
+              >
+                ALL
+              </button>
+              {baseEmails.map(base => (
+                <button
+                  key={base}
+                  onClick={() => setActiveBaseEmail(base)}
+                  className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded-none font-bold border-2 border-black whitespace-nowrap transition-all text-xs sm:text-sm md:text-base ${getTabColor(base, activeBaseEmail === base)}`}
                 >
-                  ALL
+                  <span className="sm:hidden">{base.split('@')[0]}</span>
+                  <span className="hidden sm:inline">{base}</span>
                 </button>
-                {baseEmails.map(base => (
-                  <button
-                    key={base}
-                    onClick={() => setActiveBaseEmail(base)}
-                    className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded-none font-bold border-2 border-black whitespace-nowrap transition-all text-xs sm:text-sm md:text-base ${getTabColor(base, activeBaseEmail === base)}`}
-                  >
-                    <span className="sm:hidden">{base.split('@')[0]}</span>
-                    <span className="hidden sm:inline">{base}</span>
-                  </button>
-                ))}
-             </div>
+              ))}
+            </div>
           </section>
         )}
 
@@ -916,18 +916,17 @@ export default function Home() {
               </button>
               <button
                 onClick={exportCSV}
-                className="neo-btn bg-[#22c55e] text-white px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm"
+                className="neo-btn bg-green-600 text-white px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm"
               >
                 {Icons.download}
                 <span className="hidden sm:inline">EXPORT</span>
               </button>
               <button
                 onClick={() => setSelectMode(!selectMode)}
-                className={`neo-btn px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm ${
-                  selectMode 
-                    ? 'bg-[#3b82f6] text-white' 
+                className={`neo-btn px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm ${selectMode
+                    ? 'bg-[#3b82f6] text-white'
                     : 'bg-white text-black hover:bg-slate-50'
-                }`}
+                  }`}
               >
                 {Icons.checkAll}
                 <span className="hidden sm:inline">{selectMode ? 'EXIT' : 'SELECT'}</span>
@@ -942,7 +941,7 @@ export default function Home() {
                 </span>
               </button>
             </div>
-            
+
             {selectMode && selectedEmails.size > 0 && (
               <div className="flex gap-2 sm:gap-3 mb-4 animate-fade-in">
                 <button
@@ -970,11 +969,10 @@ export default function Home() {
                     <button
                       key={f}
                       onClick={() => { setFilter(f); setCurrentPage(1) }}
-                      className={`flex-1 sm:flex-none px-2 sm:px-4 py-2 font-bold transition-all border-r-2 border-black last:border-r-0 text-xs sm:text-sm ${
-                        filter === f
-                          ? (f === 'available' ? 'bg-[#22c55e] text-white' : f === 'used' ? 'bg-[#ef4444] text-white' : 'bg-black text-white')
+                      className={`flex-1 sm:flex-none px-2 sm:px-4 py-2 font-bold transition-all border-r-2 border-black last:border-r-0 text-xs sm:text-sm ${filter === f
+                          ? (f === 'available' ? 'bg-green-600 text-white' : f === 'used' ? 'bg-red-600 text-white' : 'bg-black text-white')
                           : 'bg-white text-black hover:bg-slate-50'
-                      }`}
+                        }`}
                     >
                       <span className="sm:hidden">{f === 'available' ? 'AVAIL' : f.toUpperCase()}</span>
                       <span className="hidden sm:inline">{f.toUpperCase()}</span>
@@ -1042,13 +1040,12 @@ export default function Home() {
             paginatedEmails.map((email, index) => {
               const globalIndex = (currentPage - 1) * itemsPerPage + index + 1
               const isSelected = selectedEmails.has(email.id)
-              
+
               return (
                 <div
                   key={email.id}
-                  className={`stagger-item neo-list-item p-2 sm:p-3 border-l-4 transition-all ${
-                    email.isUsed ? 'border-l-[#ef4444]' : 'border-l-[#22c55e]'
-                  } ${isSelected ? 'ring-2 ring-[#3b82f6] ring-offset-1' : ''}`}
+                  className={`stagger-item neo-list-item p-2 sm:p-3 border-l-4 transition-all ${email.isUsed ? 'border-l-[#ef4444]' : 'border-l-[#22c55e]'
+                    } ${isSelected ? 'ring-2 ring-[#3b82f6] ring-offset-1' : ''}`}
                   onClick={() => selectMode && toggleSelect(email.id)}
                   style={{ cursor: selectMode ? 'pointer' : 'default' }}
                 >
@@ -1064,33 +1061,32 @@ export default function Home() {
                         onClick={e => e.stopPropagation()}
                       />
                     )}
-                    
+
                     {/* Index Number */}
                     <span className="text-[10px] sm:text-xs font-black text-black bg-[#f59e0b] px-1.5 sm:px-2 py-0.5 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] shrink-0">
                       #{globalIndex}
                     </span>
-                    
+
                     {/* Email Address */}
                     <span className="font-mono text-xs sm:text-sm md:text-base font-bold text-slate-800 dark:text-white min-w-0 truncate">
                       {highlightDots(email.generatedEmail)}
                     </span>
-                    
+
                     {/* Status Badge - Right after email */}
-                    <span className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 font-bold border-2 border-black shrink-0 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${
-                      email.isUsed 
+                    <span className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 font-bold border-2 border-black shrink-0 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${email.isUsed
                         ? 'bg-[#ef4444] text-white'
                         : 'bg-[#22c55e] text-white'
-                    }`}>
+                      }`}>
                       {email.isUsed ? 'USED' : 'AVAIL'}
                     </span>
-                    
+
                     {/* Note indicator - Desktop only */}
                     {email.note && (
                       <span className="hidden md:inline text-xs text-slate-500 dark:text-slate-400 truncate max-w-[100px] lg:max-w-[150px]" title={email.note}>
                         📝 {email.note}
                       </span>
                     )}
-                    
+
                     {/* Tags - Desktop only */}
                     {email.tags && email.tags.length > 0 && (
                       <div className="hidden md:flex items-center gap-1 shrink-0">
@@ -1104,20 +1100,19 @@ export default function Home() {
                         )}
                       </div>
                     )}
-                    
+
                     {/* Spacer to push action buttons to right - Desktop only */}
                     <div className="hidden sm:block flex-1" />
-                    
+
                     {/* Action Buttons - Desktop (inline) */}
                     {!selectMode && (
                       <div className="hidden sm:flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
                         <button
                           onClick={() => copyToClipboard(email.generatedEmail, email.id)}
-                          className={`p-2 border-2 border-black transition-all duration-100 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${
-                            copied === email.id 
-                              ? 'bg-[#22c55e] text-white' 
+                          className={`p-2 border-2 border-black transition-all duration-100 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${copied === email.id
+                              ? 'bg-[#22c55e] text-white'
                               : 'bg-white text-black hover:bg-slate-50'
-                          }`}
+                            }`}
                           title="Copy"
                         >
                           <span className="w-4 h-4 md:w-5 md:h-5 block">{copied === email.id ? Icons.check : Icons.copy}</span>
@@ -1131,22 +1126,20 @@ export default function Home() {
                         </button>
                         <button
                           onClick={() => { setEditingEmailId(email.id); setNoteText(email.note || '') }}
-                          className={`p-2 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all duration-100 ${
-                            (email.note || (email.tags && email.tags.length > 0))
-                              ? 'bg-[#f59e0b] text-black' 
+                          className={`p-2 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all duration-100 ${(email.note || (email.tags && email.tags.length > 0))
+                              ? 'bg-[#f59e0b] text-black'
                               : 'bg-white text-black hover:bg-slate-50'
-                          }`}
+                            }`}
                           title="Edit note & tags"
                         >
                           <span className="w-4 h-4 md:w-5 md:h-5 block">{Icons.note}</span>
                         </button>
                         <button
                           onClick={() => toggleUsed(email.id, email.isUsed)}
-                          className={`p-2 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all duration-100 ${
-                            email.isUsed
+                          className={`p-2 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all duration-100 ${email.isUsed
                               ? 'bg-[#22c55e] text-white'
                               : 'bg-white text-black hover:bg-slate-50'
-                          }`}
+                            }`}
                           title={email.isUsed ? 'Mark available' : 'Mark used'}
                         >
                           <span className="w-4 h-4 md:w-5 md:h-5 block">{email.isUsed ? Icons.undo : Icons.check}</span>
@@ -1161,17 +1154,16 @@ export default function Home() {
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Row 2: Action Buttons - Mobile only */}
                   {!selectMode && (
                     <div className="flex sm:hidden items-center gap-1.5 mt-2" onClick={e => e.stopPropagation()}>
                       <button
                         onClick={() => copyToClipboard(email.generatedEmail, email.id)}
-                        className={`p-2 border-2 border-black transition-all duration-100 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${
-                          copied === email.id 
-                            ? 'bg-[#22c55e] text-white' 
+                        className={`p-2 border-2 border-black transition-all duration-100 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${copied === email.id
+                            ? 'bg-[#22c55e] text-white'
                             : 'bg-white text-black'
-                        }`}
+                          }`}
                       >
                         <span className="w-4 h-4 block">{copied === email.id ? Icons.check : Icons.copy}</span>
                       </button>
@@ -1183,21 +1175,19 @@ export default function Home() {
                       </button>
                       <button
                         onClick={() => { setEditingEmailId(email.id); setNoteText(email.note || '') }}
-                        className={`p-2 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all duration-100 ${
-                          (email.note || (email.tags && email.tags.length > 0))
-                            ? 'bg-[#f59e0b] text-black' 
+                        className={`p-2 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all duration-100 ${(email.note || (email.tags && email.tags.length > 0))
+                            ? 'bg-[#f59e0b] text-black'
                             : 'bg-white text-black'
-                        }`}
+                          }`}
                       >
                         <span className="w-4 h-4 block">{Icons.note}</span>
                       </button>
                       <button
                         onClick={() => toggleUsed(email.id, email.isUsed)}
-                        className={`p-2 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all duration-100 ${
-                          email.isUsed
+                        className={`p-2 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all duration-100 ${email.isUsed
                             ? 'bg-[#22c55e] text-white'
                             : 'bg-white text-black'
-                        }`}
+                          }`}
                       >
                         <span className="w-4 h-4 block">{email.isUsed ? Icons.undo : Icons.check}</span>
                       </button>
@@ -1207,7 +1197,7 @@ export default function Home() {
                       >
                         <span className="w-4 h-4 block">{Icons.trash}</span>
                       </button>
-                      
+
                       {/* Note & Tags indicator - Mobile */}
                       {(email.note || (email.tags && email.tags.length > 0)) && (
                         <div className="flex items-center gap-1 ml-auto text-[10px] text-slate-500">
@@ -1240,38 +1230,38 @@ export default function Home() {
                           </button>
                         </div>
                       </div>
-                      
+
                       <div>
                         <label className="text-[10px] sm:text-xs font-black text-black uppercase mb-1 block">Tags</label>
                         <div className="flex gap-2 mb-2">
                           <input
-                             type="text"
-                             value={tagText}
-                             onChange={(e) => setTagText(e.target.value)}
-                             placeholder="Add tag..."
-                             className="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm border-2 border-black outline-none focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
-                             onKeyDown={(e) => {
-                               if (e.key === 'Enter') handleAddTag(email.id)
-                             }}
+                            type="text"
+                            value={tagText}
+                            onChange={(e) => setTagText(e.target.value)}
+                            placeholder="Add tag..."
+                            className="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm border-2 border-black outline-none focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleAddTag(email.id)
+                            }}
                           />
                           <button onClick={() => handleAddTag(email.id)} className="px-3 sm:px-4 py-2 bg-white text-black text-xs sm:text-sm font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all">
                             ADD
                           </button>
                         </div>
                         <div className="flex flex-wrap gap-1 sm:gap-2">
-                           {email.tags && email.tags.map(tag => (
-                             <span key={tag} className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold bg-white border border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] sm:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black">
-                               {tag.toUpperCase()}
-                               <button onClick={() => handleRemoveTag(email.id, tag)} className="hover:text-red-500 font-black">×</button>
-                             </span>
-                           ))}
+                          {email.tags && email.tags.map(tag => (
+                            <span key={tag} className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold bg-white border border-black shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] sm:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black">
+                              {tag.toUpperCase()}
+                              <button onClick={() => handleRemoveTag(email.id, tag)} className="hover:text-red-500 font-black">×</button>
+                            </span>
+                          ))}
                         </div>
                       </div>
 
                       <div className="mt-3 sm:mt-4 flex justify-end">
-                         <button onClick={() => setEditingEmailId(null)} className="text-[10px] sm:text-xs font-bold text-slate-500 hover:text-black uppercase">
-                            Close
-                         </button>
+                        <button onClick={() => setEditingEmailId(null)} className="text-[10px] sm:text-xs font-bold text-slate-500 hover:text-black uppercase">
+                          Close
+                        </button>
                       </div>
                     </div>
                   ) : null}
@@ -1324,18 +1314,18 @@ export default function Home() {
                   >
                     <span className="w-4 h-4 sm:w-6 sm:h-6 block">{Icons.chevronLeft}</span>
                   </button>
-                  
+
                   <div className="flex items-center gap-1 sm:gap-2">
                     {(() => {
                       const pages: (number | 'ellipsis-start' | 'ellipsis-end')[] = []
                       const boundary = 2
-                      
+
                       const startPages = []
-                      for(let i=1; i<=Math.min(boundary, totalPages); i++) startPages.push(i)
-                        
+                      for (let i = 1; i <= Math.min(boundary, totalPages); i++) startPages.push(i)
+
                       const endPages = []
-                      for(let i=Math.max(totalPages-boundary+1, boundary+1); i<=totalPages; i++) endPages.push(i)
-                      
+                      for (let i = Math.max(totalPages - boundary + 1, boundary + 1); i <= totalPages; i++) endPages.push(i)
+
                       if (totalPages <= (boundary * 2) + 1) {
                         for (let i = 1; i <= totalPages; i++) pages.push(i)
                       } else {
@@ -1352,18 +1342,18 @@ export default function Home() {
                         if (typeof page === 'string') {
                           const isJumping = jumpingEllipsis === page
                           return isJumping ? (
-                             <input
-                               key={`jump-${page}`}
-                               type="number"
-                               autoFocus
-                               onBlur={() => setJumpingEllipsis(null)}
-                               onKeyDown={handleJumpToPage}
-                               className="w-10 sm:w-12 h-8 sm:h-10 px-1 text-center font-bold text-xs sm:text-sm rounded-none border-2 border-black outline-none bg-white dark:bg-slate-800 text-black dark:text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                               placeholder="#"
-                             />
+                            <input
+                              key={`jump-${page}`}
+                              type="number"
+                              autoFocus
+                              onBlur={() => setJumpingEllipsis(null)}
+                              onKeyDown={handleJumpToPage}
+                              className="w-10 sm:w-12 h-8 sm:h-10 px-1 text-center font-bold text-xs sm:text-sm rounded-none border-2 border-black outline-none bg-white dark:bg-slate-800 text-black dark:text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                              placeholder="#"
+                            />
                           ) : (
                             <button
-                              key={`ellipsis-${idx}`} 
+                              key={`ellipsis-${idx}`}
                               className="min-w-[32px] sm:min-w-[40px] h-8 sm:h-10 px-1.5 sm:px-2 font-black text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-none transition-colors text-sm"
                               onClick={() => setJumpingEllipsis(page)}
                               title="Jump to page"
@@ -1376,11 +1366,10 @@ export default function Home() {
                             <button
                               key={page}
                               onClick={() => setCurrentPage(page)}
-                              className={`min-w-[32px] sm:min-w-[40px] h-8 sm:h-10 px-2 sm:px-3 rounded-none font-bold text-xs sm:text-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[1px] active:translate-y-[1px] transition-all ${
-                                currentPage === page
+                              className={`min-w-[32px] sm:min-w-[40px] h-8 sm:h-10 px-2 sm:px-3 rounded-none font-bold text-xs sm:text-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[1px] active:translate-y-[1px] transition-all ${currentPage === page
                                   ? 'bg-black text-white'
                                   : 'bg-white dark:bg-slate-800 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700'
-                              }`}
+                                }`}
                             >
                               {page}
                             </button>
@@ -1420,7 +1409,7 @@ export default function Home() {
               No emails generated yet
             </h2>
             <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-              Enter your Gmail address above to generate unlimited dot variations. 
+              Enter your Gmail address above to generate unlimited dot variations.
               All data is stored locally!
             </p>
           </div>
@@ -1435,7 +1424,7 @@ export default function Home() {
             <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400">
               Try adjusting your search or filter
             </p>
-            <button 
+            <button
               onClick={() => { setSearch(''); setFilter('all') }}
               className="mt-4 px-4 py-2 bg-[#3b82f6] text-white font-bold border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[1px] active:translate-y-[1px] transition-all text-sm sm:text-base"
             >
