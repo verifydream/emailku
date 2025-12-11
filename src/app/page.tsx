@@ -86,8 +86,8 @@ const CustomNeoSelect = ({
                   setIsOpen(false)
                 }}
                 className={`w-full text-left px-4 md:px-6 py-3 md:py-4 font-bold transition-colors text-sm md:text-base border-b-2 border-black dark:border-white last:border-b-0 ${value === option
-                    ? 'bg-black dark:bg-white text-white dark:text-black'
-                    : 'bg-white dark:bg-slate-800 text-black dark:text-white hover:bg-[#3b82f6] hover:text-white'
+                  ? 'bg-black dark:bg-white text-white dark:text-black'
+                  : 'bg-white dark:bg-slate-800 text-black dark:text-white hover:bg-[#3b82f6] hover:text-white'
                   }`}
               >
                 {option.toUpperCase()}
@@ -530,8 +530,8 @@ export default function Home() {
       {toast && (
         <div className="fixed top-4 right-4 z-[100] animate-slide-down">
           <div className={`px-6 py-4 rounded-none border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-3 ${toast.type === 'success' ? 'bg-green-600 text-white' :
-              toast.type === 'error' ? 'bg-red-600 text-white' :
-                'bg-white text-black'
+            toast.type === 'error' ? 'bg-red-600 text-white' :
+              'bg-white text-black'
             }`}>
             {toast.type === 'success' && Icons.check}
             {toast.type === 'error' && <span className="font-black text-xl">!</span>}
@@ -819,8 +819,8 @@ export default function Home() {
               <button
                 onClick={() => setGenMode('dot')}
                 className={`px-2 sm:px-4 md:px-6 py-2.5 sm:py-3 rounded-none font-bold border-2 border-black transition-all text-xs sm:text-sm md:text-base ${genMode === 'dot'
-                    ? 'bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]'
-                    : 'bg-white text-black hover:bg-slate-50'
+                  ? 'bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]'
+                  : 'bg-white text-black hover:bg-slate-50'
                   }`}
               >
                 Dot Only
@@ -828,8 +828,8 @@ export default function Home() {
               <button
                 onClick={() => setGenMode('plus')}
                 className={`px-2 sm:px-4 md:px-6 py-2.5 sm:py-3 rounded-none font-bold border-2 border-black transition-all text-xs sm:text-sm md:text-base ${genMode === 'plus'
-                    ? 'bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]'
-                    : 'bg-white text-black hover:bg-slate-50'
+                  ? 'bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]'
+                  : 'bg-white text-black hover:bg-slate-50'
                   }`}
               >
                 Plus Only
@@ -837,8 +837,8 @@ export default function Home() {
               <button
                 onClick={() => setGenMode('mixed')}
                 className={`px-2 sm:px-4 md:px-6 py-2.5 sm:py-3 rounded-none font-bold border-2 border-black transition-all text-xs sm:text-sm md:text-base ${genMode === 'mixed'
-                    ? 'bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]'
-                    : 'bg-white text-black hover:bg-slate-50'
+                  ? 'bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]'
+                  : 'bg-white text-black hover:bg-slate-50'
                   }`}
               >
                 Mixed
@@ -883,8 +883,8 @@ export default function Home() {
               <button
                 onClick={() => setActiveBaseEmail('all')}
                 className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded-none font-bold border-2 border-black whitespace-nowrap transition-all text-xs sm:text-sm md:text-base ${activeBaseEmail === 'all'
-                    ? 'bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]'
-                    : 'bg-white text-black hover:bg-slate-50'
+                  ? 'bg-black text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]'
+                  : 'bg-white text-black hover:bg-slate-50'
                   }`}
               >
                 ALL
@@ -924,8 +924,8 @@ export default function Home() {
               <button
                 onClick={() => setSelectMode(!selectMode)}
                 className={`neo-btn px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm ${selectMode
-                    ? 'bg-[#3b82f6] text-white'
-                    : 'bg-white text-black hover:bg-slate-50'
+                  ? 'bg-[#3b82f6] text-white'
+                  : 'bg-white text-black hover:bg-slate-50'
                   }`}
               >
                 {Icons.checkAll}
@@ -970,8 +970,8 @@ export default function Home() {
                       key={f}
                       onClick={() => { setFilter(f); setCurrentPage(1) }}
                       className={`flex-1 sm:flex-none px-2 sm:px-4 py-2 font-bold transition-all border-r-2 border-black last:border-r-0 text-xs sm:text-sm ${filter === f
-                          ? (f === 'available' ? 'bg-green-600 text-white' : f === 'used' ? 'bg-red-600 text-white' : 'bg-black text-white')
-                          : 'bg-white text-black hover:bg-slate-50'
+                        ? (f === 'available' ? 'bg-green-600 text-white' : f === 'used' ? 'bg-red-600 text-white' : 'bg-black text-white')
+                        : 'bg-white text-black hover:bg-slate-50'
                         }`}
                     >
                       <span className="sm:hidden">{f === 'available' ? 'AVAIL' : f.toUpperCase()}</span>
@@ -1074,8 +1074,8 @@ export default function Home() {
 
                     {/* Status Badge - Right after email */}
                     <span className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 font-bold border-2 border-black shrink-0 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${email.isUsed
-                        ? 'bg-[#ef4444] text-white'
-                        : 'bg-[#22c55e] text-white'
+                      ? 'bg-[#ef4444] text-white'
+                      : 'bg-[#22c55e] text-white'
                       }`}>
                       {email.isUsed ? 'USED' : 'AVAIL'}
                     </span>
@@ -1110,8 +1110,8 @@ export default function Home() {
                         <button
                           onClick={() => copyToClipboard(email.generatedEmail, email.id)}
                           className={`p-2 border-2 border-black transition-all duration-100 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${copied === email.id
-                              ? 'bg-[#22c55e] text-white'
-                              : 'bg-white text-black hover:bg-slate-50'
+                            ? 'bg-[#22c55e] text-white'
+                            : 'bg-white text-black hover:bg-slate-50'
                             }`}
                           title="Copy"
                         >
@@ -1127,8 +1127,8 @@ export default function Home() {
                         <button
                           onClick={() => { setEditingEmailId(email.id); setNoteText(email.note || '') }}
                           className={`p-2 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all duration-100 ${(email.note || (email.tags && email.tags.length > 0))
-                              ? 'bg-[#f59e0b] text-black'
-                              : 'bg-white text-black hover:bg-slate-50'
+                            ? 'bg-[#f59e0b] text-black'
+                            : 'bg-white text-black hover:bg-slate-50'
                             }`}
                           title="Edit note & tags"
                         >
@@ -1137,8 +1137,8 @@ export default function Home() {
                         <button
                           onClick={() => toggleUsed(email.id, email.isUsed)}
                           className={`p-2 border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all duration-100 ${email.isUsed
-                              ? 'bg-[#22c55e] text-white'
-                              : 'bg-white text-black hover:bg-slate-50'
+                            ? 'bg-[#22c55e] text-white'
+                            : 'bg-white text-black hover:bg-slate-50'
                             }`}
                           title={email.isUsed ? 'Mark available' : 'Mark used'}
                         >
@@ -1161,8 +1161,8 @@ export default function Home() {
                       <button
                         onClick={() => copyToClipboard(email.generatedEmail, email.id)}
                         className={`p-2 border-2 border-black transition-all duration-100 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${copied === email.id
-                            ? 'bg-[#22c55e] text-white'
-                            : 'bg-white text-black'
+                          ? 'bg-[#22c55e] text-white'
+                          : 'bg-white text-black'
                           }`}
                       >
                         <span className="w-4 h-4 block">{copied === email.id ? Icons.check : Icons.copy}</span>
@@ -1176,8 +1176,8 @@ export default function Home() {
                       <button
                         onClick={() => { setEditingEmailId(email.id); setNoteText(email.note || '') }}
                         className={`p-2 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all duration-100 ${(email.note || (email.tags && email.tags.length > 0))
-                            ? 'bg-[#f59e0b] text-black'
-                            : 'bg-white text-black'
+                          ? 'bg-[#f59e0b] text-black'
+                          : 'bg-white text-black'
                           }`}
                       >
                         <span className="w-4 h-4 block">{Icons.note}</span>
@@ -1185,8 +1185,8 @@ export default function Home() {
                       <button
                         onClick={() => toggleUsed(email.id, email.isUsed)}
                         className={`p-2 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all duration-100 ${email.isUsed
-                            ? 'bg-[#22c55e] text-white'
-                            : 'bg-white text-black'
+                          ? 'bg-[#22c55e] text-white'
+                          : 'bg-white text-black'
                           }`}
                       >
                         <span className="w-4 h-4 block">{email.isUsed ? Icons.undo : Icons.check}</span>
@@ -1283,6 +1283,7 @@ export default function Home() {
                     value={itemsPerPage}
                     onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
                     className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-bold rounded-none bg-white dark:bg-slate-800 text-black dark:text-white border-2 border-black focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] outline-none cursor-pointer transition-all"
+                    aria-label="Show items per page"
                   >
                     {PAGE_SIZE_OPTIONS.map(size => (
                       <option key={size} value={size}>{size}</option>
@@ -1302,8 +1303,9 @@ export default function Home() {
                     onClick={() => setCurrentPage(1)}
                     disabled={currentPage === 1}
                     className="p-1.5 sm:p-2 rounded-none border-2 border-black bg-white dark:bg-slate-800 text-black dark:text-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-700 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[1px] active:translate-y-[1px] transition-all"
+                    aria-label="First Page"
                   >
-                    <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
                     </svg>
                   </button>
@@ -1311,8 +1313,9 @@ export default function Home() {
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
                     className="p-1.5 sm:p-2 rounded-none border-2 border-black bg-white dark:bg-slate-800 text-black dark:text-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-700 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[1px] active:translate-y-[1px] transition-all"
+                    aria-label="Previous Page"
                   >
-                    <span className="w-4 h-4 sm:w-6 sm:h-6 block">{Icons.chevronLeft}</span>
+                    <span className="w-4 h-4 sm:w-6 sm:h-6 block" aria-hidden="true">{Icons.chevronLeft}</span>
                   </button>
 
                   <div className="flex items-center gap-1 sm:gap-2">
@@ -1350,6 +1353,7 @@ export default function Home() {
                               onKeyDown={handleJumpToPage}
                               className="w-10 sm:w-12 h-8 sm:h-10 px-1 text-center font-bold text-xs sm:text-sm rounded-none border-2 border-black outline-none bg-white dark:bg-slate-800 text-black dark:text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
                               placeholder="#"
+                              aria-label="Jump to page"
                             />
                           ) : (
                             <button
@@ -1357,6 +1361,7 @@ export default function Home() {
                               className="min-w-[32px] sm:min-w-[40px] h-8 sm:h-10 px-1.5 sm:px-2 font-black text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-none transition-colors text-sm"
                               onClick={() => setJumpingEllipsis(page)}
                               title="Jump to page"
+                              aria-label="Jump to page"
                             >
                               ...
                             </button>
@@ -1367,8 +1372,8 @@ export default function Home() {
                               key={page}
                               onClick={() => setCurrentPage(page)}
                               className={`min-w-[32px] sm:min-w-[40px] h-8 sm:h-10 px-2 sm:px-3 rounded-none font-bold text-xs sm:text-sm border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[1px] active:translate-y-[1px] transition-all ${currentPage === page
-                                  ? 'bg-black text-white'
-                                  : 'bg-white dark:bg-slate-800 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700'
+                                ? 'bg-black text-white'
+                                : 'bg-white dark:bg-slate-800 text-black dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700'
                                 }`}
                             >
                               {page}
@@ -1383,15 +1388,17 @@ export default function Home() {
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
                     className="p-1.5 sm:p-2 rounded-none border-2 border-black bg-white dark:bg-slate-800 text-black dark:text-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-700 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[1px] active:translate-y-[1px] transition-all"
+                    aria-label="Next Page"
                   >
-                    <span className="w-4 h-4 sm:w-6 sm:h-6 block">{Icons.chevronRight}</span>
+                    <span className="w-4 h-4 sm:w-6 sm:h-6 block" aria-hidden="true">{Icons.chevronRight}</span>
                   </button>
                   <button
                     onClick={() => setCurrentPage(totalPages)}
                     disabled={currentPage === totalPages}
                     className="p-1.5 sm:p-2 rounded-none border-2 border-black bg-white dark:bg-slate-800 text-black dark:text-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-700 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[1px] active:translate-y-[1px] transition-all"
+                    aria-label="Last Page"
                   >
-                    <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
                     </svg>
                   </button>
