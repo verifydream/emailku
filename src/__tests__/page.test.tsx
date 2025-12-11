@@ -216,8 +216,11 @@ describe('Home Page', () => {
         })
 
         // Wait for list to render actions
+        // Wait for list to render actions by checking for action buttons wrapper or specific icons
         await waitFor(() => {
-            expect(screen.getAllByRole('button', { name: /Mark as used/i }).length).toBeGreaterThan(0)
+            // Using a more generic selector to ensure list rendered
+            const actionButtons = document.querySelectorAll('button[aria-label="Mark as used"]')
+            expect(actionButtons.length).toBeGreaterThan(0)
         })
 
         // 1. Toggle Status (Available -> Used)
