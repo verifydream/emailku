@@ -7,7 +7,7 @@ export function generateVariations(email: string, mode: GenerationMode = 'dot', 
     throw new Error('Invalid email format')
   }
 
-  const cleanLocal = localPart.replace(/\./g, '')
+  const cleanLocal = localPart.replaceAll('.', '')
 
   // Base logic for dots
   const generateDots = () => {
@@ -74,6 +74,6 @@ export function generateDotVariations(email: string): string[] {
 export function isValidGmail(email: string): boolean {
   const gmailRegex = /^[a-zA-Z0-9]+@gmail\.com$/i
   // Clean dots and normalize domain (case-insensitive)
-  const cleanEmail = email.toLowerCase().replace(/\./g, '').replace('@gmailcom', '@gmail.com')
+  const cleanEmail = email.toLowerCase().replaceAll('.', '').replace('@gmailcom', '@gmail.com')
   return gmailRegex.test(cleanEmail)
 }

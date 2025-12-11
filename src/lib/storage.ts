@@ -25,10 +25,10 @@ export function saveEmails(emails: Email[]): void {
 export function addEmails(newEmails: Omit<Email, 'id'>[]): { inserted: number; total: number } {
   const existing = getEmails()
   const existingSet = new Set(existing.map(e => e.generatedEmail))
-  
+
   let maxId = existing.reduce((max, e) => Math.max(max, e.id), 0)
   let inserted = 0
-  
+
   const toAdd: Email[] = []
   for (const email of newEmails) {
     if (!existingSet.has(email.generatedEmail)) {
@@ -38,7 +38,7 @@ export function addEmails(newEmails: Omit<Email, 'id'>[]): { inserted: number; t
       inserted++
     }
   }
-  
+
   saveEmails([...existing, ...toAdd])
   return { inserted, total: newEmails.length }
 }
@@ -71,7 +71,7 @@ export function addMasterTag(tag: string): void {
   const tags = getMasterTags()
   const normalized = tag.toLowerCase().trim()
   if (normalized && !tags.includes(normalized)) {
-    saveMasterTags([...tags, normalized].sort())
+    saveMasterTags([...tags, normalized].sort((a, b) => a.localeCompare(b)))
   }
 }
 

@@ -73,7 +73,17 @@ const CustomNeoSelect = ({
 
       {isOpen && (
         <>
-          <div className="fixed inset-0" style={{ zIndex: 9998 }} onClick={() => setIsOpen(false)} />
+          <div
+            className="fixed inset-0"
+            style={{ zIndex: 9998 }}
+            onClick={() => setIsOpen(false)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') setIsOpen(false)
+            }}
+            aria-label="Close select menu"
+          />
           <div
             className="absolute top-full left-0 right-0 mt-2 max-h-60 overflow-y-auto border-3 border-black dark:border-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
             style={{ zIndex: 9999 }}
@@ -148,7 +158,7 @@ export default function Home() {
     loadEmails()
     loadMasterTags()
     const savedItemsPerPage = localStorage.getItem('itemsPerPage')
-    if (savedItemsPerPage) setItemsPerPage(parseInt(savedItemsPerPage))
+    if (savedItemsPerPage) setItemsPerPage(Number.parseInt(savedItemsPerPage, 10))
     const isDark = localStorage.getItem('darkMode') === 'true' ||
       window.matchMedia('(prefers-color-scheme: dark)').matches
     setDarkMode(isDark)
@@ -205,7 +215,7 @@ export default function Home() {
 
     try {
       const variations = generateVariations(inputEmail, genMode, inputTag.trim())
-      const baseEmail = inputEmail.toLowerCase().replace(/\./g, '').replace('@gmailcom', '@gmail.com')
+      const baseEmail = inputEmail.toLowerCase().replaceAll('.', '').replace('@gmailcom', '@gmail.com')
       const now = new Date().toISOString()
 
       const newEmails = variations.map(generatedEmail => ({
@@ -319,7 +329,9 @@ export default function Home() {
       showToast('No available emails!', 'error')
       return
     }
-    const random = available[Math.floor(Math.random() * available.length)]
+    const array = new Uint32Array(1)
+    crypto.getRandomValues(array)
+    const random = available[array[0] % available.length]
 
     // Mark as used immediately
     updateEmail(random.id, { isUsed: true, usedAt: new Date().toISOString() })
@@ -336,7 +348,7 @@ export default function Home() {
       e.generatedEmail,
       e.isUsed ? 'Used' : 'Available',
       e.usedAt ? new Date(e.usedAt).toLocaleDateString() : '',
-      (e.note || '').replace(/,/g, ';')
+      (e.note || '').replaceAll(',', ';')
     ])
     const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
@@ -416,14 +428,14 @@ export default function Home() {
   // Get unique base emails for tabs
   const baseEmails = useMemo(() => {
     const bases = new Set(emails.map(e => e.baseEmail))
-    return Array.from(bases).sort()
+    return Array.from(bases).sort((a, b) => a.localeCompare(b))
   }, [emails])
 
   // Get unique tags for filter
   const uniqueTags = useMemo(() => {
     const tags = new Set<string>()
     emails.forEach(e => e.tags?.forEach(t => tags.add(t)))
-    return Array.from(tags).sort()
+    return Array.from(tags).sort((a, b) => a.localeCompare(b))
   }, [emails])
 
   const totalPages = Math.ceil(filteredEmails.length / itemsPerPage)
@@ -460,8 +472,8 @@ export default function Home() {
 
   const handleJumpToPage = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      const page = parseInt((e.target as HTMLInputElement).value)
-      if (!isNaN(page) && page >= 1 && page <= totalPages) {
+      const page = Number.parseInt((e.target as HTMLInputElement).value, 10)
+      if (!Number.isNaN(page) && page >= 1 && page <= totalPages) {
         setCurrentPage(page)
         setJumpingEllipsis(null)
       } else {
@@ -515,7 +527,7 @@ export default function Home() {
 
     // Simple hash to pick color index
     let hash = 0;
-    for (let i = 0; i < base.length; i++) hash = base.charCodeAt(i) + ((hash << 5) - hash);
+    for (let i = 0; i < base.length; i++) hash = base.codePointAt(i)! + ((hash << 5) - hash);
     const index = Math.abs(hash) % colors.length;
 
     if (isActive) {
@@ -542,7 +554,16 @@ export default function Home() {
 
       {/* Shortcuts Modal */}
       {showShortcuts && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-4" onClick={() => setShowShortcuts(false)}>
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-4"
+          onClick={() => setShowShortcuts(false)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') setShowShortcuts(false)
+          }}
+          aria-label="Close shortcuts modal"
+        >
           <div className="neo-card p-5 sm:p-8 max-w-md w-full animate-fade-in" onClick={e => e.stopPropagation()}>
             <h3 className="text-xl sm:text-2xl font-black mb-4 sm:mb-6 uppercase tracking-wider text-black dark:text-white">Shortcuts</h3>
             <div className="space-y-3 sm:space-y-4">
@@ -568,7 +589,16 @@ export default function Home() {
 
       {/* Settings Modal */}
       {showSettings && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-4" onClick={() => setShowSettings(false)}>
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-4"
+          onClick={() => setShowSettings(false)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') setShowSettings(false)
+          }}
+          aria-label="Close settings modal"
+        >
           <div className="neo-card p-5 sm:p-8 max-w-md w-full animate-fade-in border-3 border-black" onClick={e => e.stopPropagation()}>
             <h3 className="text-xl sm:text-2xl font-black mb-4 sm:mb-6 uppercase tracking-wider text-black dark:text-white flex items-center gap-2 sm:gap-3">
               <span className="w-5 h-5 sm:w-6 sm:h-6">{Icons.settings}</span> Master Tags
@@ -631,7 +661,16 @@ export default function Home() {
 
       {/* Delete Confirmation Modal */}
       {deleteModal.show && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-4" onClick={() => setDeleteModal({ ...deleteModal, show: false })}>
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-4"
+          onClick={() => setDeleteModal({ ...deleteModal, show: false })}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') setDeleteModal({ ...deleteModal, show: false })
+          }}
+          aria-label="Close delete modal"
+        >
           <div className="neo-card p-5 sm:p-8 max-w-md w-full animate-fade-in border-3 border-black" onClick={e => e.stopPropagation()}>
             <div className="flex flex-col items-center text-center mb-4 sm:mb-6">
               <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#dc2626] rounded-full border-3 border-black flex items-center justify-center mb-4 sm:mb-6 text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
@@ -1048,6 +1087,13 @@ export default function Home() {
                     } ${isSelected ? 'ring-2 ring-[#3b82f6] ring-offset-1' : ''}`}
                   onClick={() => selectMode && toggleSelect(email.id)}
                   style={{ cursor: selectMode ? 'pointer' : 'default' }}
+                  role={selectMode ? "button" : undefined}
+                  tabIndex={selectMode ? 0 : undefined}
+                  onKeyDown={(e) => {
+                    if (selectMode && (e.key === 'Enter' || e.key === ' ')) {
+                      toggleSelect(email.id)
+                    }
+                  }}
                 >
                   {/* Row 1: Index + Email + Status (always visible) */}
                   <div className="flex items-center gap-2 sm:gap-3">
@@ -1106,7 +1152,11 @@ export default function Home() {
 
                     {/* Action Buttons - Desktop (inline) */}
                     {!selectMode && (
-                      <div className="hidden sm:flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
+                      <div
+                        className="hidden sm:flex items-center gap-1.5 shrink-0"
+                        onClick={e => e.stopPropagation()}
+                        role="presentation"
+                      >
                         <button
                           onClick={() => copyToClipboard(email.generatedEmail, email.id)}
                           className={`p-2 border-2 border-black transition-all duration-100 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] ${copied === email.id
@@ -1157,7 +1207,11 @@ export default function Home() {
 
                   {/* Row 2: Action Buttons - Mobile only */}
                   {!selectMode && (
-                    <div className="flex sm:hidden items-center gap-1.5 mt-2" onClick={e => e.stopPropagation()}>
+                    <div
+                      className="flex sm:hidden items-center gap-1.5 mt-2"
+                      onClick={e => e.stopPropagation()}
+                      role="presentation"
+                    >
                       <button
                         onClick={() => copyToClipboard(email.generatedEmail, email.id)}
                         className={`p-2 border-2 border-black transition-all duration-100 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${copied === email.id
@@ -1209,11 +1263,16 @@ export default function Home() {
                   )}
 
                   {editingEmailId === email.id ? (
-                    <div className="mt-2 sm:mt-3 animate-fade-in p-3 sm:p-4 bg-white border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] sm:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" onClick={e => e.stopPropagation()}>
+                    <div
+                      className="mt-2 sm:mt-3 animate-fade-in p-3 sm:p-4 bg-white border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] sm:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                      onClick={e => e.stopPropagation()}
+                      role="presentation"
+                    >
                       <div className="mb-3">
-                        <label className="text-[10px] sm:text-xs font-black text-black uppercase mb-1 block">Note</label>
+                        <label htmlFor={`note-${email.id}`} className="text-[10px] sm:text-xs font-black text-black uppercase mb-1 block">Note</label>
                         <div className="flex gap-2">
                           <input
+                            id={`note-${email.id}`}
                             type="text"
                             value={noteText}
                             onChange={(e) => setNoteText(e.target.value)}
@@ -1232,9 +1291,10 @@ export default function Home() {
                       </div>
 
                       <div>
-                        <label className="text-[10px] sm:text-xs font-black text-black uppercase mb-1 block">Tags</label>
+                        <label htmlFor={`tag-${email.id}`} className="text-[10px] sm:text-xs font-black text-black uppercase mb-1 block">Tags</label>
                         <div className="flex gap-2 mb-2">
                           <input
+                            id={`tag-${email.id}`}
                             type="text"
                             value={tagText}
                             onChange={(e) => setTagText(e.target.value)}
