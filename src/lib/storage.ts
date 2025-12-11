@@ -14,7 +14,14 @@ const STORAGE_KEY = 'gmail-dot-generator-emails'
 export function getEmails(): Email[] {
   if (typeof window === 'undefined') return []
   const data = localStorage.getItem(STORAGE_KEY)
-  return data ? JSON.parse(data) : []
+  if (!data) return []
+
+  try {
+    return JSON.parse(data)
+  } catch (error) {
+    console.error('Email data korup, reset ke kosong...', error)
+    return []
+  }
 }
 
 export function saveEmails(emails: Email[]): void {
@@ -59,7 +66,14 @@ const DEFAULT_TAGS = ['google', 'netflix', 'facebook', 'twitter', 'amazon']
 export function getMasterTags(): string[] {
   if (typeof window === 'undefined') return DEFAULT_TAGS
   const data = localStorage.getItem(TAGS_STORAGE_KEY)
-  return data ? JSON.parse(data) : DEFAULT_TAGS
+  if (!data) return DEFAULT_TAGS
+
+  try {
+    return JSON.parse(data)
+  } catch (error) {
+    console.error('Tag data korup, reset ke default...', error)
+    return DEFAULT_TAGS
+  }
 }
 
 export function saveMasterTags(tags: string[]): void {

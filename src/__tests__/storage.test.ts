@@ -58,6 +58,16 @@ describe('Storage Functions - Email Operations', () => {
 
             expect(emails).toEqual(mockEmails)
         })
+
+        test('should handle corrupt data safely', () => {
+            const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => { })
+                ; (localStorage.getItem as jest.Mock).mockReturnValue('invalid-json {')
+
+            const emails = getEmails()
+
+            expect(emails).toEqual([])
+            consoleSpy.mockRestore()
+        })
     })
 
     describe('saveEmails', () => {
@@ -268,6 +278,16 @@ describe('Storage Functions - Master Tags', () => {
             const tags = getMasterTags()
 
             expect(tags).toEqual(customTags)
+        })
+
+        test('should handle corrupt tags data safely', () => {
+            const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => { })
+                ; (localStorage.getItem as jest.Mock).mockReturnValue('invalid-json-tags')
+
+            const tags = getMasterTags()
+
+            expect(tags).toEqual(DEFAULT_TAGS)
+            consoleSpy.mockRestore()
         })
     })
 
